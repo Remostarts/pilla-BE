@@ -1,0 +1,20 @@
+components:
+    securitySchemes:
+        bearerAuth:
+            type: http
+            scheme: bearer
+            bearerFormat: JWT
+        cookieAuth:
+            type: apiKey
+            in: cookie
+            name: refreshToken
+    schemas:
+        timestamps:
+            properties:
+                createdAt:
+                    type: string
+                    format: date-time
+                updatedAt:
+                    type: string
+                    format: date-time
+            required: [createdAt, updatedAt]

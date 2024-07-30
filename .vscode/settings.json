@@ -1,0 +1,36 @@
+{
+    // Theme
+    "workbench.colorTheme": "FireFly Pro Midnight",
+
+    // config related to code formatting
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "[javascript]": {
+        "editor.formatOnSave": false,
+        "editor.defaultFormatter": null
+    },
+    "[javascriptreact]": {
+        "editor.formatOnSave": false,
+        "editor.defaultFormatter": null
+    },
+    "javascript.validate.enable": false, //disable all built-in syntax checking
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "explicit",
+        "source.fixAll.tslint": "explicit",
+        "source.organizeImports": "explicit"
+    },
+    "eslint.validate": ["typescript"],
+
+    // emmet
+    "emmet.triggerExpansionOnTab": true,
+    "emmet.includeLanguages": {
+        "javascript": "javascriptreact",
+        "typescript": "typescriptreact"
+    },
+    "cSpell.words": ["hamba", "nosql"],
+    "editor.fontSize": 13,
+    "yaml.schemas": {
+        "openapi:v3": "file:///home/dev_reality/Documents/dev_ssd/pro_cleaner-server/src/app/modules/auths/emailAuth/nested/email.docs.yaml",
+        "swaggerviewer:openapi": "file:///home/dev_reality/Documents/dev_ssd/pro_cleaner-server/src/app/modules/auths/emailAuth/nested/test.yaml"
+    }
+}

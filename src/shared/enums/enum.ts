@@ -10,3 +10,8 @@ export enum AdminPermissions {
     SERVICE_MANAGER = 'service_manager',
     booking_MANAGER = 'booking_manager',
 }
+
+export enum CustomerType {
+    PERSONAL = 'personal',
+    BUSINESS = 'business',
+}

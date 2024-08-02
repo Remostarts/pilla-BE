@@ -1,17 +1,33 @@
-import { Profile, User } from '@prisma/client';
+import { GettingStartedUser, Profile, User } from '@prisma/client';
+
+export type TPartialUserRegisterInput = {
+    email: string;
+    firstName: string;
+    middleName: string;
+    lastName: string;
+    phoneNumber: string;
+};
 
 export type TUserRegisterInput = {
     email: string;
     password: string;
-    firstName: string;
-    lastName: string;
-    phoneNumber?: string;
+    confirmPasswords: string;
+    emailVerificationCode: string;
+    customerType: string;
+};
+
+export type TForgetPasswordInput = {
+    currentPassword: string;
+    newPassword: string;
+    confirmNewPassword: string;
 };
 
 export type TUserLoginInput = {
     email: string;
     password: string;
 };
+
+export type TPartialUser = GettingStartedUser;
 
 export type TUserWithProfile = User & {
     profile?: Profile | null;

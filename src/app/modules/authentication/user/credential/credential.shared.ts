@@ -1,6 +1,6 @@
-import { Profile, User } from '@prisma/client';
+import { User } from '@prisma/client';
 import { prisma } from '../../../../../shared';
-import { TUserWithProfile } from './credential.types';
+import { TPartialUser, TUserWithProfile } from './credential.types';
 
 export class CredentialSharedServices {
     static async findUserByEmail(email: string): Promise<TUserWithProfile | null> {
@@ -8,6 +8,12 @@ export class CredentialSharedServices {
             where: { email },
             include: { profile: true },
         });
+    }
+
+    static async findPartialUserByEmail(email: string): Promise<TPartialUser | null> {
+        return prisma.gettingStartedUser.findFirst({
+            where: { email },
+        }) as Promise<TPartialUser | null>;
     }
 
     static async findUserById(id: string) {
@@ -27,10 +33,10 @@ export class CredentialSharedServices {
         });
     }
 
-    static async findProfileByPhoneNumber(phoneNumber: string): Promise<Profile | null> {
-        return prisma.profile.findFirst({
+    static async findUserByPhoneNumber(phone: string): Promise<User | null> {
+        return prisma.user.findUnique({
             where: {
-                phoneNumber,
+                phone,
             },
         });
     }

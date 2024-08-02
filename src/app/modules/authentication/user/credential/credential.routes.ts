@@ -1,18 +1,23 @@
 import { Router } from 'express';
-import { asyncHandler, zodValidator } from '../../../../../shared';
+import { asyncHandler, roleVerifier, zodValidator } from '../../../../../shared';
 import { CredentialModules } from './credential.modules';
 import {
+    forgetPasswordZodSchema,
+    gettingStarteUserZodSchema,
     loginZodSchema,
-    refreshTokenZodSchema,
     registerZodSchema,
-    verifyEmailZodSchema,
 } from './credential.validation';
 
 const router = Router();
 const credentialModules = new CredentialModules();
-const { createUser, loginUser, refreshAccessToken, logoutUser, verifyEmail } =
+const { createPartialUser, createUser, loginUser, forgetPassword } =
     credentialModules.credentialControllers;
 
+router.post(
+    '/create-partial-user',
+    zodValidator(gettingStarteUserZodSchema),
+    asyncHandler(createPartialUser.bind(credentialModules))
+);
 router.post(
     '/register',
     zodValidator(registerZodSchema),
@@ -23,20 +28,26 @@ router.post(
     zodValidator(loginZodSchema),
     asyncHandler(loginUser.bind(credentialModules))
 );
-router.get(
-    '/refresh-token',
-    zodValidator(refreshTokenZodSchema),
-    asyncHandler(refreshAccessToken.bind(credentialModules))
-);
 router.post(
-    '/verify-email',
-    zodValidator(verifyEmailZodSchema),
-    asyncHandler(verifyEmail.bind(credentialModules))
+    '/forget-password',
+    zodValidator(forgetPasswordZodSchema),
+    roleVerifier('user', 'admin', 'super_admin'),
+    asyncHandler(forgetPassword.bind(credentialModules))
 );
-router.get(
-    '/logout',
-    zodValidator(refreshTokenZodSchema),
-    asyncHandler(logoutUser.bind(credentialModules))
-);
+// router.get(
+//     '/refresh-token',
+//     zodValidator(refreshTokenZodSchema),
+//     asyncHandler(refreshAccessToken.bind(credentialModules))
+// );
+// router.post(
+//     '/verify-email',
+//     zodValidator(verifyEmailZodSchema),
+//     asyncHandler(verifyEmail.bind(credentialModules))
+// );
+// router.get(
+//     '/logout',
+//     zodValidator(refreshTokenZodSchema),
+//     asyncHandler(logoutUser.bind(credentialModules))
+// );
 
 export const credentialRoutes = router;

@@ -10,36 +10,57 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Define the User model
-model User {
-  id           String   @id @default(uuid())
-  email        String   @unique
-  role         String   @default("user")
-  password     String?
-  firstName    String
-  lastName     String
-  profileImage String?
-  isVerified   Boolean  @default(false)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  profile      Profile?
-  refreshToken String[]
-
-  @@map("users")
+model User {  
+  id                String          @id @default(uuid())
+  email             String          @unique
+  phone             String?         @unique
+  role              String          @default("user")
+  customerType      CustomerType    
+  password          String?         
+  firstName         String          
+  middleName        String          
+  lastName          String          
+  profileImage      String?         
+  isVerified        Boolean         @default(false)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  profile           Profile?        
+  refreshToken      String[]      
 }
 
-// Define the Profile model
 model Profile {
-  id          String   @id @default(uuid())
-  road        String?
-  house       String?
-  city        String?
-  phoneNumber String? @unique
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  userId      String   @unique
-  // Define the relation to the User model
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String          @id @default(uuid())
+  road              String?       
+  house             String?       
+  city              String?       
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  userId            String          @unique
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
 
-  @@map("profiles")
+model GettingStartedUser {
+  id                           String          @id @unique @default(uuid())
+  email                        String          @unique
+  phone                        String?         @unique
+  firstName                    String
+  lastName                     String
+  middleName                   String
+  emailVerificationCode        String?
+  emailVerificationExpiresAt   DateTime?
+  phoneVerificationCode        String?
+  phoneVerificationExpiresAt   DateTime?
+}
+
+model Feedback {
+  id                  String          @id @default(uuid())
+  name                String
+  email               String          
+  message             String
+  createdAt           DateTime        @default(now())
+}
+
+enum CustomerType {
+  personal
+  business
 }

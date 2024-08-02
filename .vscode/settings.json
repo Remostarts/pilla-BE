@@ -1,6 +1,6 @@
 {
     // Theme
-    "workbench.colorTheme": "FireFly Pro Midnight",
+    "workbench.colorTheme": "One Monokai",
 
     // config related to code formatting
     "editor.defaultFormatter": "esbenp.prettier-vscode",

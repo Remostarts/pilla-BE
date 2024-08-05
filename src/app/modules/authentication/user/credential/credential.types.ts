@@ -17,7 +17,6 @@ export type TUserRegisterInput = {
 };
 
 export type TForgetPasswordInput = {
-    currentPassword: string;
     newPassword: string;
     confirmNewPassword: string;
 };

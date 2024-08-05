@@ -120,10 +120,6 @@ export const verifyEmailZodSchema = z.object({
 export const forgetPasswordZodSchema = z.object({
     body: z
         .object({
-            currentPassword: z.string({
-                required_error: 'current password is required',
-            }),
-
             newPassword: z
                 .string({
                     required_error: 'Password is required',

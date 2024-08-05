@@ -11,6 +11,7 @@ import {
     prisma,
 } from '../../../../../shared';
 import { CustomerType } from '../../../../../shared/enums';
+import { MailOptions, sendMail } from '../../../../../shared/mail/mailService';
 import { CredentialSharedServices } from './credential.shared';
 import {
     TForgetPasswordInput,
@@ -71,6 +72,24 @@ export class CredentialServices {
                 // phoneVerificationCode: code,
             },
         });
+
+        const mailOptions: MailOptions = {
+            to: user.email,
+            subject: 'Your OTP Code',
+            template: 'sentOtp',
+            context: {
+                name: user.firstName,
+                otp: code,
+            },
+        };
+
+        try {
+            await sendMail(mailOptions);
+            console.log('Verification email sent successfully.');
+        } catch (error) {
+            console.error('Failed to send verification email:', error);
+            // Optionally, handle the error (e.g., clean up the user created in case of failure)
+        }
 
         return createdPartialUser;
     };
@@ -208,7 +227,7 @@ export class CredentialServices {
         input: TForgetPasswordInput,
         userID: string
     ): Promise<Omit<User, 'password'> | null> => {
-        const { currentPassword, confirmNewPassword, newPassword } = input;
+        const { confirmNewPassword, newPassword } = input;
 
         if (newPassword !== confirmNewPassword) {
             throw new HandleApiError(
@@ -227,19 +246,6 @@ export class CredentialServices {
                 errorNames.NOT_FOUND,
                 httpStatus.NOT_FOUND,
                 'user not found !'
-            );
-        }
-
-        const isPasswordValid = await prisma.user.validatePassword(
-            user.password as string,
-            currentPassword
-        );
-
-        if (!isPasswordValid) {
-            throw new HandleApiError(
-                errorNames.UNAUTHORIZED,
-                httpStatus.UNAUTHORIZED,
-                'invalid current password!'
             );
         }
 

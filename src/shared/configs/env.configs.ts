@@ -18,6 +18,12 @@ export const configs = {
     googlePlaygroundRefresh: process.env.GOOGLE_PLAYGROUND_REFRESH_TOKEN,
 
     //* nodemailer secrets
-    senderEmail: process.env.SENDER_EMAIL,
-    senderPass: process.env.SENDER_PASS,
+    mailHost: process.env.MAIL_HOST,
+    mailPort: process.env.MAIL_PORT,
+    mailServiceProvider: process.env.MAIL_SERVICE_PROVIDER,
+    mailIgnoreTls: process.env.MAIL_IGNORE_TLS,
+    mailsecure: process.env.MAIL_SECURE,
+    mailRequireTls: process.env.MAIL_REQUIRE_TLS,
+    senderEmail: process.env.MAIL_USER,
+    senderPass: process.env.MAIL_PASSWORD,
 };

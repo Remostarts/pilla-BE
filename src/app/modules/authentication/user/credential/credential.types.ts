@@ -17,8 +17,14 @@ export type TUserRegisterInput = {
 };
 
 export type TForgetPasswordInput = {
+    email: string;
+    emailVerificationCode: string;
     newPassword: string;
     confirmNewPassword: string;
+};
+
+export type TEmailOtpSend = {
+    email: string;
 };
 
 export type TUserLoginInput = {

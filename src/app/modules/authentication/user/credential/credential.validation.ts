@@ -120,6 +120,21 @@ export const verifyEmailZodSchema = z.object({
 export const forgetPasswordZodSchema = z.object({
     body: z
         .object({
+            email: z
+                .string({
+                    required_error: 'Email is required',
+                })
+                .email({
+                    message: 'Invalid email format.',
+                })
+                .trim(),
+
+            emailVerificationCode: z
+                .string({
+                    required_error: 'code is required',
+                })
+                .trim(),
+
             newPassword: z
                 .string({
                     required_error: 'Password is required',
@@ -147,4 +162,17 @@ export const forgetPasswordZodSchema = z.object({
                 path: ['password', 'confirmPassword'],
             }
         ),
+});
+
+export const forgetPasswordOtpSendZodSchema = z.object({
+    body: z.object({
+        email: z
+            .string({
+                required_error: 'Email is required',
+            })
+            .email({
+                message: 'Invalid email format.',
+            })
+            .trim(),
+    }),
 });

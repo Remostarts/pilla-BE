@@ -14,6 +14,7 @@ import { CustomerType } from '../../../../../shared/enums';
 import { MailOptions, sendMail } from '../../../../../shared/mail/mailService';
 import { CredentialSharedServices } from './credential.shared';
 import {
+    TEmailOtpSend,
     TForgetPasswordInput,
     TPartialUser,
     TPartialUserRegisterInput,
@@ -22,7 +23,7 @@ import {
     TUserRegisterInput,
 } from './credential.types';
 
-const { findUserByEmail, findPartialUserByEmail, findUserByPhoneNumber, updateUserById } =
+const { findUserByEmail, findPartialUserByEmail, findUserByPhoneNumber, updateUserByEmail } =
     CredentialSharedServices;
 
 export class CredentialServices {
@@ -223,22 +224,11 @@ export class CredentialServices {
         return { role, accessToken, refreshToken, userExists };
     };
 
-    forgetPassword = async (
-        input: TForgetPasswordInput,
-        userID: string
-    ): Promise<Omit<User, 'password'> | null> => {
-        const { confirmNewPassword, newPassword } = input;
-
-        if (newPassword !== confirmNewPassword) {
-            throw new HandleApiError(
-                errorNames.CONFLICT,
-                httpStatus.CONFLICT,
-                'new passowrd and confirm password must be same'
-            );
-        }
+    otpSend = async (input: TEmailOtpSend): Promise<Omit<User, 'password'> | null> => {
+        const { email } = input;
 
         const user = await prisma.user.findUnique({
-            where: { id: userID },
+            where: { email },
         });
 
         if (!user) {
@@ -249,10 +239,128 @@ export class CredentialServices {
             );
         }
 
-        const updatedUser = await updateUserById(userID, { password: newPassword });
+        const code = crypto.randomInt(100000, 999999).toString();
+
+        if (!code) {
+            throw new HandleApiError(
+                errorNames.CONFLICT,
+                httpStatus.CONFLICT,
+                'Error while generating code!'
+            );
+        }
+
+        const mailOptions: MailOptions = {
+            to: email,
+            subject: 'Your OTP Code',
+            template: 'sentOtp',
+            context: {
+                name: user.firstName,
+                otp: code,
+            },
+        };
+
+        try {
+            await sendMail(mailOptions);
+            console.log('Verification email sent successfully.');
+        } catch (error) {
+            console.error('Failed to send verification email:', error);
+            // Optionally, handle the error (e.g., clean up the user created in case of failure)
+        }
+
+        const expirationTime = 5 * 60 * 1000; // 5 minutes
+
+        const updatedUser = await updateUserByEmail(email, {
+            emailVerificationCode: code,
+            emailVerificationExpiresAt: new Date(Date.now() + expirationTime),
+        });
 
         return updatedUser;
     };
+
+    forgetPassword = async (
+        input: TForgetPasswordInput
+    ): Promise<Omit<User, 'password'> | null> => {
+        const { confirmNewPassword, newPassword, email, emailVerificationCode } = input;
+
+        if (newPassword !== confirmNewPassword) {
+            throw new HandleApiError(
+                errorNames.CONFLICT,
+                httpStatus.CONFLICT,
+                'new passowrd and confirm password must be same'
+            );
+        }
+
+        const user = await prisma.user.findUnique({
+            where: { email },
+        });
+
+        if (!user) {
+            throw new HandleApiError(
+                errorNames.NOT_FOUND,
+                httpStatus.NOT_FOUND,
+                'user not found !'
+            );
+        }
+
+        if (!user.emailVerificationCode) {
+            throw new HandleApiError(
+                errorNames.UNAUTHORIZED,
+                httpStatus.UNAUTHORIZED,
+                'Verification code not found!'
+            );
+        }
+
+        if (user?.emailVerificationExpiresAt < new Date()) {
+            throw new HandleApiError(
+                errorNames.UNAUTHORIZED,
+                httpStatus.UNAUTHORIZED,
+                'Verification code has expired!'
+            );
+        }
+
+        if (user.emailVerificationCode !== emailVerificationCode) {
+            throw new HandleApiError(
+                errorNames.CONFLICT,
+                httpStatus.CONFLICT,
+                'Invalid email verification code'
+            );
+        }
+
+        const updatedUser = await updateUserByEmail(email, { password: newPassword });
+
+        return updatedUser;
+    };
+
+    // resetPassword = async (
+    //     input: TForgetPasswordInput,
+    //     userID: string
+    // ): Promise<Omit<User, 'password'> | null> => {
+    //     const { confirmNewPassword, newPassword } = input;
+
+    //     if (newPassword !== confirmNewPassword) {
+    //         throw new HandleApiError(
+    //             errorNames.CONFLICT,
+    //             httpStatus.CONFLICT,
+    //             'new passowrd and confirm password must be same'
+    //         );
+    //     }
+
+    //     const user = await prisma.user.findUnique({
+    //         where: { id: userID },
+    //     });
+
+    //     if (!user) {
+    //         throw new HandleApiError(
+    //             errorNames.NOT_FOUND,
+    //             httpStatus.NOT_FOUND,
+    //             'user not found !'
+    //         );
+    //     }
+
+    //     const updatedUser = await updateUserById(userID, { password: newPassword });
+
+    //     return updatedUser;
+    // };
 
     // async refreshAccessToken(
     //     refreshToken: string

@@ -1,7 +1,8 @@
 import { Router } from 'express';
-import { asyncHandler, roleVerifier, zodValidator } from '../../../../../shared';
+import { asyncHandler, zodValidator } from '../../../../../shared';
 import { CredentialModules } from './credential.modules';
 import {
+    forgetPasswordOtpSendZodSchema,
     forgetPasswordZodSchema,
     gettingStarteUserZodSchema,
     loginZodSchema,
@@ -10,7 +11,7 @@ import {
 
 const router = Router();
 const credentialModules = new CredentialModules();
-const { createPartialUser, createUser, loginUser, forgetPassword } =
+const { createPartialUser, createUser, loginUser, forgetPassword, forgetPasswordOtpSend } =
     credentialModules.credentialControllers;
 
 router.post(
@@ -29,9 +30,13 @@ router.post(
     asyncHandler(loginUser.bind(credentialModules))
 );
 router.post(
+    '/forget-password-otp-send',
+    zodValidator(forgetPasswordOtpSendZodSchema),
+    asyncHandler(forgetPasswordOtpSend.bind(credentialModules))
+);
+router.post(
     '/forget-password',
     zodValidator(forgetPasswordZodSchema),
-    roleVerifier('user', 'admin', 'super_admin'),
     asyncHandler(forgetPassword.bind(credentialModules))
 );
 // router.get(

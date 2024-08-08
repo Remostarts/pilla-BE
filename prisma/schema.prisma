@@ -11,21 +11,25 @@ datasource db {
 }
 
 model User {  
-  id                String          @id @default(uuid())
-  email             String          @unique
-  phone             String?         @unique
-  role              String          @default("user")
-  customerType      CustomerType    
-  password          String?         
-  firstName         String          
-  middleName        String          
-  lastName          String          
-  profileImage      String?         
-  isVerified        Boolean         @default(false)
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
-  profile           Profile?        
-  refreshToken      String[]      
+  id                           String          @id @default(uuid())
+  email                        String          @unique
+  phone                        String?         @unique
+  role                         String          @default("user")
+  customerType                 CustomerType    
+  password                     String?         
+  firstName                    String          
+  middleName                   String          
+  lastName                     String          
+  profileImage                 String?         
+  isVerified                   Boolean         @default(false)
+  createdAt                    DateTime        @default(now())
+  updatedAt                    DateTime        @updatedAt
+  profile                      Profile?        
+  emailVerificationCode        String?
+  emailVerificationExpiresAt   DateTime?
+  phoneVerificationCode        String?
+  phoneVerificationExpiresAt   DateTime?
+  refreshToken                 String[]      
 }
 
 model Profile {

@@ -49,4 +49,16 @@ export class CredentialSharedServices {
             data,
         });
     }
+
+    static async updateUserByEmail(
+        email: string,
+        data: Record<string, unknown>
+    ): Promise<User | null> {
+        return prisma.user.update({
+            where: {
+                email,
+            },
+            data,
+        });
+    }
 }

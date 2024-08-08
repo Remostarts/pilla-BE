@@ -7,6 +7,7 @@ import { CredentialServices } from './credential.services';
 import { CredentialSharedServices } from './credential.shared';
 import {
     TCookies,
+    TEmailOtpSend,
     TForgetPasswordInput,
     TPartialUserRegisterInput,
     TUserLoginInput,
@@ -76,10 +77,20 @@ export class CredentialControllers {
         });
     }
 
+    async forgetPasswordOtpSend(req: Request, res: Response): Promise<void> {
+        const result = await this.credentialServices.otpSend(req.body as TEmailOtpSend);
+
+        responseHandler<object>(res, {
+            statusCode: httpStatus.OK,
+            success: true,
+            message: 'Otp sent successfully',
+            data: result,
+        });
+    }
+
     async forgetPassword(req: Request, res: Response): Promise<void> {
         const result = await this.credentialServices.forgetPassword(
-            req.body as TForgetPasswordInput,
-            req.user?.id as string
+            req.body as TForgetPasswordInput
         );
 
         responseHandler<object>(res, {

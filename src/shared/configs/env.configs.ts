@@ -26,4 +26,6 @@ export const configs = {
     mailRequireTls: process.env.MAIL_REQUIRE_TLS,
     senderEmail: process.env.MAIL_USER,
     senderPass: process.env.MAIL_PASSWORD,
+
+    node_env: process.env.NODE_ENV,
 };

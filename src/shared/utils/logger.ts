@@ -1,5 +1,4 @@
 import path from 'path';
-
 import { createLogger, format, transports } from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
 import { configs } from '../configs/env.configs';
@@ -55,17 +54,14 @@ const devFormat = printf(({ level, message, label: _label, timestamp: _timestamp
 `;
 });
 
-const selectFormat = () => {
-    if (env === 'development') {
-        return devFormat;
-    }
-    return prodFormat;
-};
+const selectFormat = () => (env === 'development' ? devFormat : prodFormat);
+
+const isVercel = process.env.VERCEL === '1';
 
 const loggerTransports = [];
 const errorLoggerTransports = [];
 
-if (env === 'development') {
+if (env === 'development' || isVercel) {
     loggerTransports.push(
         new transports.Console({
             format: combine(colorize({ all: true })),
@@ -78,7 +74,7 @@ if (env === 'development') {
     );
 }
 
-if (env === 'production') {
+if (env === 'production' && !isVercel) {
     const successLogFilePath = path.join(
         process.cwd(),
         'logs',

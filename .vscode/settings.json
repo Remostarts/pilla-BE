@@ -28,7 +28,7 @@
         "typescript": "typescriptreact"
     },
     "cSpell.words": ["hamba", "nosql"],
-    "editor.fontSize": 18,
+    "editor.fontSize": 16,
     "yaml.schemas": {
         "openapi:v3": "file:///home/dev_reality/Documents/dev_ssd/pro_cleaner-server/src/app/modules/auths/emailAuth/nested/email.docs.yaml",
         "swaggerviewer:openapi": "file:///home/dev_reality/Documents/dev_ssd/pro_cleaner-server/src/app/modules/auths/emailAuth/nested/test.yaml"

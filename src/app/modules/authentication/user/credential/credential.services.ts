@@ -144,7 +144,6 @@ export class CredentialServices {
                 lastName,
                 customerType: customerType as CustomerType,
                 phone,
-                isVerified: true,
             },
         });
 

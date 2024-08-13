@@ -25,9 +25,9 @@ export const handleClientError = (
         errors = [
             {
                 path: path[0],
-                message: `unique constraint error on field ${err.message.match(
-                    /(?<=\().+?(?=\))/g
-                )?.[0]}`,
+                message: `unique constraint error on field ${
+                    err.message.match(/(?<=\().+?(?=\))/g)?.[0]
+                }`,
             },
         ];
     }

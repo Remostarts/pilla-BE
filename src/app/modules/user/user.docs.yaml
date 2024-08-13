@@ -1,0 +1,316 @@
+openapi: 3.0.0
+info:
+    title: User API
+    version: 1.0.0
+
+paths:
+    /user/verify-bvn:
+        post:
+            summary: Verify BVN (Bank Verification Number)
+            tags: [User]
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/BvnVerificationInput'
+            responses:
+                '200':
+                    description: BVN verification successful
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/BankVerification'
+                '404':
+                    description: User not found
+                '409':
+                    description: Conflict - All fields are required
+                '500':
+                    description: Internal server error
+
+    /user/verify-id:
+        post:
+            summary: Verify Identity
+            tags: [User]
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/IdVerificationInput'
+            responses:
+                '200':
+                    description: ID verification successful
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/IdentityVerification'
+                '404':
+                    description: User not found
+                '409':
+                    description: Conflict - All fields are required
+                '500':
+                    description: Internal server error
+
+    /user/verify-address:
+        post:
+            summary: Verify Address
+            tags: [User]
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ProofOfAddressInput'
+            responses:
+                '200':
+                    description: Address verification successful
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ProofOfAddress'
+                '404':
+                    description: User not found
+                '409':
+                    description: Conflict - All fields are required
+                '500':
+                    description: Internal server error
+
+    /user/add-next-of-kin:
+        post:
+            summary: Add Next of Kin
+            tags: [User]
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/NextOfKinInput'
+            responses:
+                '200':
+                    description: Next of Kin added successfully
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/NextOfKin'
+                '404':
+                    description: User not found
+                '409':
+                    description: Conflict - All fields are required
+                '500':
+                    description: Internal server error
+
+components:
+    schemas:
+        BvnVerificationInput:
+            type: object
+            properties:
+                bvn:
+                    type: string
+                    example: '12345678901'
+                gender:
+                    type: string
+                    enum: ['male', 'female']
+                    example: 'male'
+                dateOfBirth:
+                    type: string
+                    format: date
+                    example: '1990-01-01'
+            required:
+                - bvn
+                - gender
+                - dateOfBirth
+
+        IdVerificationInput:
+            type: object
+            properties:
+                documentType:
+                    type: string
+                    enum: ['international_passport', 'driver_license', 'voter_id']
+                    example: 'driver_license'
+                idNumber:
+                    type: string
+                    example: 'A1234567'
+                image:
+                    type: string
+            required:
+                - documentType
+                - idNumber
+                - image
+
+        ProofOfAddressInput:
+            type: object
+            properties:
+                address:
+                    type: string
+                    example: '123 Main St'
+                state:
+                    type: string
+                    example: 'Lagos'
+                localGovernment:
+                    type: string
+                    example: 'Ikeja'
+                city:
+                    type: string
+                    example: 'Lagos'
+                documentType:
+                    type: string
+                    enum: ['electricity_bill', 'water_bill', 'waste_bil', 'cable_bill']
+                    example: 'electricity_bill'
+                image:
+                    type: string
+            required:
+                - address
+                - state
+                - localGovernment
+                - city
+                - documentType
+                - image
+
+        NextOfKinInput:
+            type: object
+            properties:
+                firstName:
+                    type: string
+                    example: 'John'
+                lastName:
+                    type: string
+                    example: 'Doe'
+                gender:
+                    type: string
+                    enum: ['male', 'female']
+                    example: 'male'
+                relationship:
+                    type: string
+                    example: 'brother'
+                phone:
+                    type: string
+                    example: '+2348012345678'
+                email:
+                    type: string
+                    example: 'john.doe@example.com'
+                address:
+                    type: string
+                    example: '123 Main St, Lagos'
+            required:
+                - firstName
+                - lastName
+                - gender
+                - relationship
+                - phone
+                - email
+                - address
+
+        BankVerification:
+            type: object
+            properties:
+                id:
+                    type: string
+                    example: 'vb5352c-cc414c-1cdcd55'
+                bvn:
+                    type: string
+                    example: '12345678901'
+                gender:
+                    type: string
+                    enum: ['male', 'female']
+                    example: 'male'
+                dateOfBirth:
+                    type: string
+                    format: date
+                    example: '1990-01-01'
+                isVerified:
+                    type: boolean
+                    example: true
+                userId:
+                    type: string
+                    example: 'vb5352c-cc414c-1cdcd55'
+
+        IdentityVerification:
+            type: object
+            properties:
+                id:
+                    type: string
+                    example: 'vb5352c-cc414c-1cdcd55'
+                documentType:
+                    type: string
+                    enum: ['international_passport', 'driver_license', 'voter_id']
+                    example: 'passport'
+                idNumber:
+                    type: string
+                    example: 'A1234567'
+                image:
+                    type: string
+                    format: binary
+                isVerified:
+                    type: boolean
+                    example: true
+                userId:
+                    type: string
+                    example: 'vb5352c-cc414c-1cdcd55'
+
+        ProofOfAddress:
+            type: object
+            properties:
+                id:
+                    type: string
+                    example: 'vb5352c-cc414c-1cdcd55'
+                address:
+                    type: string
+                    example: '123 Main St'
+                state:
+                    type: string
+                    example: 'Lagos'
+                localGovernment:
+                    type: string
+                    example: 'Ikeja'
+                city:
+                    type: string
+                    example: 'Lagos'
+                documentType:
+                    type: string
+                    enum: ['electricity_bill', 'water_bill', 'waste_bil', 'cable_bill']
+                    example: 'electricity_bill'
+                image:
+                    type: string
+                    format: binary
+                isVerified:
+                    type: boolean
+                    example: true
+                userId:
+                    type: string
+                    example: 'vb5352c-cc414c-1cdcd55'
+
+        NextOfKin:
+            type: object
+            properties:
+                id:
+                    type: string
+                    example: 'vb5352c-cc414c-1cdcd55'
+                firstName:
+                    type: string
+                    example: 'John'
+                lastName:
+                    type: string
+                    example: 'Doe'
+                gender:
+                    type: string
+                    enum: ['male', 'female']
+                    example: 'male'
+                relationship:
+                    type: string
+                    example: 'brother'
+                phone:
+                    type: string
+                    example: '+2348012345678'
+                email:
+                    type: string
+                    example: 'john.doe@example.com'
+                address:
+                    type: string
+                    example: '123 Main St, Lagos'
+                isVerified:
+                    type: boolean
+                    example: true
+                userId:
+                    type: string
+                    example: 'vb5352c-cc414c-1cdcd55'

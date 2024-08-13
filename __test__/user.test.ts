@@ -119,7 +119,6 @@ it('Login User', async () => {
 }, 10000);
 
 it('login with empty email', async () => {
-
     await request(app).post('/api/v1/auth/create-partial-user').send(testUser);
 
     const user = await prisma.gettingStartedUser.findUnique({
@@ -196,7 +195,7 @@ it('Forget Password', async () => {
     // });
 
     await request(app).post('/api/v1/auth/forget-password-otp-send').send({
-        email: testUser.email
+        email: testUser.email,
     });
 
     const forgetUser = await prisma.user.findUnique({

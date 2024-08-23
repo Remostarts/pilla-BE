@@ -102,3 +102,33 @@ export const nextOfKinInputZodSchema = z.object({
         }),
     }),
 });
+
+export const addCardInputZodSchema = z.object({
+    body: z.object({
+        cardNumber: z.string({
+            required_error: 'card number is required',
+        }),
+
+        cardHolderName: z.string({
+            required_error: 'card holder name is required',
+        }),
+
+        cvv: z.string({
+            required_error: 'cvv is required',
+        }),
+
+        expiryDate: z.string({
+            required_error: 'expiry date is required',
+        }),
+    }),
+});
+
+export const addMoneyInputZodSchema = z.object({
+    body: z.object({
+        amount: z
+            .number({
+                required_error: 'amount is required',
+            })
+            .min(1),
+    }),
+});

@@ -4,6 +4,8 @@ import httpStatus from 'http-status';
 import { responseHandler } from '../../../shared';
 import { UserServices } from './user.services';
 import {
+    TAddCardInput,
+    TAddMoneyInput,
     TBvnVerificationInput,
     TIdVerificationInput,
     TNextOfKinInput,
@@ -70,6 +72,64 @@ export class UserControllers {
             statusCode: httpStatus.OK,
             success: true,
             message: 'Next of Kin added',
+            data: result,
+        });
+    }
+
+    async getAllTransactions(req: Request, res: Response): Promise<void> {
+        const userId = req.user?.id as string;
+
+        const transactions = await this.userServices.getAllTransactions(userId);
+
+        responseHandler<object>(res, {
+            statusCode: httpStatus.OK,
+            success: true,
+            message: 'All transactions retrieved successfully',
+            data: transactions,
+        });
+    }
+
+    async getTransactionById(req: Request, res: Response): Promise<void> {
+        const userId = req.user?.id as string;
+        const { id } = req.params;
+
+        const transaction = await this.userServices.getTransactionById(id, userId);
+
+        responseHandler<object>(res, {
+            statusCode: httpStatus.OK,
+            success: true,
+            message: 'Transaction retrieved successfully',
+            data: transaction,
+        });
+    }
+
+    async addCard(req: Request, res: Response): Promise<void> {
+        const userId = req.user?.id as string;
+
+        const result = await this.userServices.addCard(req.body as TAddCardInput, userId);
+
+        responseHandler<object>(res, {
+            statusCode: httpStatus.CREATED,
+            success: true,
+            message: 'Card added successfully',
+            data: result,
+        });
+    }
+
+    async addMoneyUsingCard(req: Request, res: Response): Promise<void> {
+        const userId = req.user?.id as string;
+        const { cardId } = req.params;
+
+        const result = await this.userServices.addMoneyUsingCard(
+            userId,
+            cardId,
+            req.body as TAddMoneyInput
+        );
+
+        responseHandler<object>(res, {
+            statusCode: httpStatus.OK,
+            success: true,
+            message: 'Money added successfully',
             data: result,
         });
     }

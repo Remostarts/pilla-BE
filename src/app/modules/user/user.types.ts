@@ -30,3 +30,14 @@ export type TNextOfKinInput = {
     email: string;
     address: string;
 };
+
+export type TAddCardInput = {
+    cardNumber: string;
+    expiryDate: string;
+    cardHolderName: string;
+    cvv: string;
+};
+
+export type TAddMoneyInput = {
+    amount: number;
+};

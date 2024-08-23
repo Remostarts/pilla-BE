@@ -1,8 +1,17 @@
 /* eslint-disable class-methods-use-this */
-import { BankVerification, IdentityVerification, NextOfKin, ProofOfAddress } from '@prisma/client';
+import {
+    BankVerification,
+    Card,
+    IdentityVerification,
+    NextOfKin,
+    ProofOfAddress,
+    Transaction,
+} from '@prisma/client';
 import httpStatus from 'http-status';
 import { errorNames, HandleApiError, prisma } from '../../../shared';
 import {
+    TAddCardInput,
+    TAddMoneyInput,
     TBvnVerificationInput,
     TIdVerificationInput,
     TNextOfKinInput,
@@ -258,5 +267,119 @@ export class UserServices {
         }
 
         return kinDetails;
+    }
+
+    async getAllTransactions(userId: string): Promise<Transaction[]> {
+        const transactions = await prisma.transaction.findMany({
+            where: { userId },
+        });
+
+        if (!transactions) {
+            throw new HandleApiError(
+                errorNames.NOT_FOUND,
+                httpStatus.NOT_FOUND,
+                'No transactions found for this user'
+            );
+        }
+
+        return transactions;
+    }
+
+    async getTransactionById(transactionId: string, userId: string): Promise<Transaction | null> {
+        const transaction = await prisma.transaction.findFirst({
+            where: { id: transactionId, userId },
+        });
+
+        if (!transaction) {
+            throw new HandleApiError(
+                errorNames.NOT_FOUND,
+                httpStatus.NOT_FOUND,
+                'Transaction not found'
+            );
+        }
+
+        return transaction;
+    }
+
+    async addCard(input: TAddCardInput, userId: string): Promise<Card | null> {
+        const { cardNumber, expiryDate, cardHolderName, cvv } = input;
+
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+        });
+
+        if (!user) {
+            throw new HandleApiError(errorNames.NOT_FOUND, httpStatus.NOT_FOUND, 'User not found');
+        }
+
+        // logic to validate card details
+
+        const card = await prisma.card.create({
+            data: {
+                cardNumber,
+                expiryDate,
+                cardHolderName,
+                cvv,
+                userId,
+            },
+        });
+
+        return card;
+    }
+
+    async addMoneyUsingCard(
+        userId: string,
+        cardId: string,
+        input: TAddMoneyInput
+    ): Promise<Transaction> {
+        const { amount } = input;
+
+        const card = await prisma.card.findFirst({
+            where: {
+                id: cardId,
+                userId,
+            },
+        });
+
+        if (!card) {
+            throw new HandleApiError(errorNames.NOT_FOUND, httpStatus.NOT_FOUND, 'Card not found');
+        }
+
+        // Add logic to process the payment using the card via a payment gateway
+
+        // If the payment is successful, create a transaction record
+
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+        });
+
+        const presentAmount = user?.amount;
+        const newAmt = (presentAmount as number) + amount;
+
+        const addAmt = await prisma.user.update({
+            where: { id: userId },
+            data: {
+                amount: newAmt,
+            },
+        });
+
+        console.log(addAmt);
+
+        const transaction = await prisma.transaction.create({
+            data: {
+                amount,
+                userId,
+                transactionType: 'Credit',
+                status: 'Success',
+                accountName: 'ABC',
+                bankName: 'ABC',
+                bankAccount: '1234',
+                narration: 'Card',
+                sessionId: '5552684102526652', // generate session id id
+                transactionId: '541241284546681222', // generate transaction id
+            },
+        });
+
+        return transaction;
     }
 }

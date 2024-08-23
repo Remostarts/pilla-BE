@@ -3,6 +3,8 @@ import { roleVerifier, zodValidator } from '../../../shared';
 import { asyncHandler } from '../../../shared/helpers/asyncHandler';
 import { UserModules } from './user.modules';
 import {
+    addCardInputZodSchema,
+    addMoneyInputZodSchema,
     bnvVerificationInputZodSchema,
     idVerificationInputZodSchema,
     nextOfKinInputZodSchema,
@@ -11,7 +13,16 @@ import {
 
 const router = Router();
 const userModules = new UserModules();
-const { bvnVerification, idVerification, proofOfAddress, nextOfKin } = userModules.userControllers;
+const {
+    bvnVerification,
+    idVerification,
+    proofOfAddress,
+    nextOfKin,
+    getAllTransactions,
+    getTransactionById,
+    addCard,
+    addMoneyUsingCard,
+} = userModules.userControllers;
 
 router.post(
     '/verify-bvn',
@@ -39,6 +50,32 @@ router.post(
     zodValidator(nextOfKinInputZodSchema),
     roleVerifier('user'),
     asyncHandler(nextOfKin.bind(userModules))
+);
+
+router.get(
+    '/transactions',
+    roleVerifier('user'),
+    asyncHandler(getAllTransactions.bind(userModules))
+);
+
+router.get(
+    '/transactions/:id',
+    roleVerifier('user'),
+    asyncHandler(getTransactionById.bind(userModules))
+);
+
+router.post(
+    '/add-card',
+    zodValidator(addCardInputZodSchema),
+    roleVerifier('user'),
+    asyncHandler(addCard.bind(userModules))
+);
+
+router.post(
+    '/add-money/:cardId',
+    zodValidator(addMoneyInputZodSchema),
+    roleVerifier('user'),
+    asyncHandler(addMoneyUsingCard.bind(userModules))
 );
 
 export const userRoutes = router;

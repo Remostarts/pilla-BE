@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import httpStatus from 'http-status';
 
 import { GettingStartedUser, User } from '@prisma/client';
-import { cookieOptions, responseHandler } from '../../../../../shared';
+import { cookieOptions, errorNames, HandleApiError, responseHandler } from '../../../../../shared';
 import { CredentialServices } from './credential.services';
 import { CredentialSharedServices } from './credential.shared';
 import {
@@ -10,6 +10,7 @@ import {
     TEmailOtpSend,
     TForgetPasswordInput,
     TPartialUserRegisterInput,
+    TRefreshToken,
     TUserLoginInput,
     TUserLoginResponse,
     TUserRegisterInput,
@@ -47,7 +48,7 @@ export class CredentialControllers {
     async loginUser(req: Request, res: Response): Promise<void> {
         const { cookies } = req as unknown as { cookies: TCookies };
         const result = await this.credentialServices.loginUser(req.body as TUserLoginInput);
-        const { refreshToken, accessToken, userExists } = result as TUserLoginResponse;
+        const { refreshToken, userExists, ...rest } = result as TUserLoginResponse;
 
         let newRefreshTokenArray = userExists.refreshToken as string[] | [];
         if (cookies?.refreshToken) {
@@ -60,6 +61,7 @@ export class CredentialControllers {
                 res.clearCookie('refreshToken', cookieOptions);
             }
         }
+
         newRefreshTokenArray = [...newRefreshTokenArray, refreshToken];
 
         await updateUserById(userExists.id, {
@@ -67,13 +69,13 @@ export class CredentialControllers {
         });
 
         res.cookie('refreshToken', refreshToken, cookieOptions);
-        res.cookie('accessToken', accessToken, cookieOptions);
+        // res.cookie('accessToken', rest.accessToken, cookieOptions);
 
         responseHandler<Omit<Omit<TUserLoginResponse, 'userExists'>, 'refreshToken'>>(res, {
             statusCode: httpStatus.OK,
             success: true,
             message: 'user logged in successfully!',
-            data: result,
+            data: rest,
         });
     }
 
@@ -101,27 +103,27 @@ export class CredentialControllers {
         });
     }
 
-    // async refreshAccessToken(req: Request, res: Response): Promise<void> {
-    //     const { refreshToken } = req.cookies as TRefreshToken;
-    //     if (!refreshToken) {
-    //         throw new HandleApiError(
-    //             errorNames.UNAUTHORIZED,
-    //             httpStatus.UNAUTHORIZED,
-    //             'invalid token!'
-    //         );
-    //     }
-    //     res.clearCookie('refreshToken', cookieOptions);
-    //     const result = await this.credentialServices.refreshAccessToken(refreshToken);
-    //     const { refreshToken: newRefreshToken, ...rest } = result as TUserLoginResponse;
-    //     res.cookie('refreshToken', newRefreshToken, cookieOptions);
+    async refreshAccessToken(req: Request, res: Response): Promise<void> {
+        const { refreshToken } = req.cookies as TRefreshToken;
+        if (!refreshToken) {
+            throw new HandleApiError(
+                errorNames.UNAUTHORIZED,
+                httpStatus.UNAUTHORIZED,
+                'invalid token!'
+            );
+        }
+        res.clearCookie('refreshToken', cookieOptions);
+        const result = await this.credentialServices.refreshAccessToken(refreshToken);
+        const { refreshToken: newRefreshToken, ...rest } = result as TUserLoginResponse;
+        res.cookie('refreshToken', newRefreshToken, cookieOptions);
 
-    //     responseHandler<Omit<TUserLoginResponse, 'userExists' | 'refreshToken'>>(res, {
-    //         statusCode: httpStatus.OK,
-    //         success: true,
-    //         message: 'token refreshed successfully!',
-    //         data: rest,
-    //     });
-    // }
+        responseHandler<Omit<TUserLoginResponse, 'userExists' | 'refreshToken'>>(res, {
+            statusCode: httpStatus.OK,
+            success: true,
+            message: 'token refreshed successfully!',
+            data: rest,
+        });
+    }
 
     // async logoutUser(req: Request, res: Response): Promise<void> {
     //     const { refreshToken } = req.cookies as TRefreshToken;

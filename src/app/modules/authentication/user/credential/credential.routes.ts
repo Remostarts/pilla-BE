@@ -6,13 +6,20 @@ import {
     forgetPasswordZodSchema,
     gettingStarteUserZodSchema,
     loginZodSchema,
+    refreshTokenZodSchema,
     registerZodSchema,
 } from './credential.validation';
 
 const router = Router();
 const credentialModules = new CredentialModules();
-const { createPartialUser, createUser, loginUser, forgetPassword, forgetPasswordOtpSend } =
-    credentialModules.credentialControllers;
+const {
+    createPartialUser,
+    createUser,
+    loginUser,
+    forgetPassword,
+    forgetPasswordOtpSend,
+    refreshAccessToken,
+} = credentialModules.credentialControllers;
 
 router.post(
     '/create-partial-user',
@@ -39,11 +46,11 @@ router.post(
     zodValidator(forgetPasswordZodSchema),
     asyncHandler(forgetPassword.bind(credentialModules))
 );
-// router.get(
-//     '/refresh-token',
-//     zodValidator(refreshTokenZodSchema),
-//     asyncHandler(refreshAccessToken.bind(credentialModules))
-// );
+router.get(
+    '/refresh-token',
+    zodValidator(refreshTokenZodSchema),
+    asyncHandler(refreshAccessToken.bind(credentialModules))
+);
 // router.post(
 //     '/verify-email',
 //     zodValidator(verifyEmailZodSchema),

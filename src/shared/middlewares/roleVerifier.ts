@@ -11,7 +11,7 @@ export const roleVerifier =
     (req: Request, _res: Response, next: NextFunction) => {
         try {
             // get authorization token
-            const token = req.cookies?.accessToken as string;
+            const token = req.cookies?.refreshToken as string;
             // const token = req.headers.authorization;
             if (!token) {
                 throw new HandleApiError(
@@ -23,7 +23,7 @@ export const roleVerifier =
             // verify token
             let verifiedUser = null;
 
-            verifiedUser = jwtHelpers.verifyToken(token, configs.jwtSecretAccess as Secret);
+            verifiedUser = jwtHelpers.verifyToken(token, configs.jwtSecretRefresh as Secret);
 
             req.user = verifiedUser;
 

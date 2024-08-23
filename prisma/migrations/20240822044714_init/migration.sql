@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Card" ALTER COLUMN "expiryDate" SET DATA TYPE TEXT;

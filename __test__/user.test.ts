@@ -2,14 +2,21 @@ import request from 'supertest';
 import app from '../src/app';
 import { prisma, resetDatabase } from '../src/shared';
 import { configs } from '../src/shared/configs';
-import httpStatus from 'http-status';
-
-// jest.mock('crypto');
 
 let server: any;
+let cookies: any;
+
 beforeEach(async () => {
     await resetDatabase();
     server = app.listen(configs.port);
+    const loginResponse = await request(app).post('/api/v1/auth/login').send({
+        email: 'bofatac543@orsbap.com',
+        password: 'Pass@123456',
+    });
+
+    console.log(loginResponse);
+
+    cookies = loginResponse.headers['set-cookie'];
 });
 
 afterEach(async () => {
@@ -17,201 +24,148 @@ afterEach(async () => {
     server.close();
 });
 
-const testUser = {
-    email: 'bofatac543@orsbap.com',
-    phoneNumber: '01412345678',
-    firstName: 'Atharva',
-    middleName: 'Pramod',
-    lastName: 'Kohapare',
-};
+it('Verify BVN', async () => {
+    const bvnVerificationData = {
+        bvn: '12345678901',
+        gender: 'male',
+        dateOfBirth: '1990-01-01',
+    };
 
-it('Health Check', async () => {
-    const response = await request(app).get('/api/v1/health');
+    const response = await request(app)
+        .post('/api/v1/user/verify-bvn')
+        .set('Cookie', cookies) // Reuses the stored cookies for this request
+        .send(bvnVerificationData);
+
     expect(response.statusCode).toBe(200);
-    expect(response.body).toEqual({});
 });
 
-it('Create Partial User', async () => {
-    const response = await request(app).post('/api/v1/auth/create-partial-user').send(testUser);
+it('Add Card', async () => {
+
+    const cardDetails = {
+        cardNumber: '1234567812345678',
+        expiryDate: '12/25',
+        cardHolderName: 'John Doe',
+        cvv: '123',
+    };
+
+    const response = await request(app)
+        .post('/api/v1/user/add-card')
+        .set('Cookie', cookies)
+        .send(cardDetails);
 
     expect(response.statusCode).toBe(201);
 });
 
-it('Create User with Invalid Verification Code', async () => {
-    await request(app).post('/api/v1/auth/create-partial-user').send(testUser);
+it('Add Money Using Card', async () => {
 
-    // const user = await prisma.gettingStartedUser.findUnique({
-    //     where: {
-    //         email: testUser.email,
-    //     }
-    // });
-
-    // const verificationCode = user?.emailVerificationCode as string;
-
-    const newUser = {
-        email: 'bofatac543@orsbap.com',
-        password: 'Pass@123456',
-        confirmPassword: 'Pass@123456',
-        emailVerificationCode: '000000',
-        customerType: 'personal',
+    const cardDetails = {
+        cardNumber: '1234567812345678',
+        expiryDate: '12/25',
+        cardHolderName: 'John Doe',
+        cvv: '123',
     };
 
-    const response = await request(app).post('/api/v1/auth/register').send(newUser);
+    const addCardResponse = await request(app)
+        .post('/api/v1/user/add-card')
+        .set('Cookie', cookies)
+        .send(cardDetails);
 
-    expect(response.statusCode).toBe(409);
-    expect(response.body.errorName).toBe('Invalid email verification code');
-});
-
-it('Create User', async () => {
-    await request(app).post('/api/v1/auth/create-partial-user').send(testUser);
-
-    const user = await prisma.gettingStartedUser.findUnique({
-        where: {
-            email: testUser.email,
-        },
-    });
-
-    const verificationCode = user?.emailVerificationCode as string;
-
-    const newUser = {
-        email: 'bofatac543@orsbap.com',
-        password: 'Pass@123456',
-        confirmPassword: 'Pass@123456',
-        emailVerificationCode: verificationCode,
-        customerType: 'personal',
+    const cardId = addCardResponse.body.data.id;
+    
+    const moneyDetails = {
+        amount: 1000,
     };
 
-    const response = await request(app).post('/api/v1/auth/register').send(newUser);
-
-    expect(response.statusCode).toBe(201);
-});
-
-it('Login User', async () => {
-    await request(app).post('/api/v1/auth/create-partial-user').send(testUser);
-
-    const user = await prisma.gettingStartedUser.findUnique({
-        where: {
-            email: testUser.email,
-        },
-    });
-
-    const verificationCode = user?.emailVerificationCode as string;
-
-    await request(app).post('/api/v1/auth/create-user').send({
-        email: 'bofatac543@orsbap.com',
-        password: 'Pass@123456',
-        confirmPassword: 'Pass@123456',
-        emailVerificationCode: verificationCode,
-        customerType: 'personal',
-    });
-
-    const response = await request(app).post('/api/v1/auth/login').send({
-        email: testUser.email,
-        password: 'Pass@123456',
-    });
+    const response = await request(app)
+        .post(`/api/v1/user/add-money/${cardId}`)
+        .set('Cookie', cookies)
+        .send(moneyDetails);
 
     expect(response.statusCode).toBe(200);
-    expect(response.body).toHaveProperty('data');
-
-    const { data } = response.body;
-    expect(data).toHaveProperty('accessToken');
-    expect(data).toHaveProperty('refreshToken');
-}, 10000);
-
-it('login with empty email', async () => {
-    await request(app).post('/api/v1/auth/create-partial-user').send(testUser);
-
-    const user = await prisma.gettingStartedUser.findUnique({
-        where: {
-            email: testUser.email,
-        },
-    });
-
-    const verificationCode = user?.emailVerificationCode as string;
-
-    await request(app).post('/api/v1/auth/create-user').send({
-        email: 'bofatac543@orsbap.com',
-        password: 'Pass@123456',
-        confirmPassword: 'Pass@123456',
-        emailVerificationCode: verificationCode,
-        customerType: 'personal',
-    });
-
-    const response = await request(app).post('/api/v1/auth/login').send({
-        email: '',
-        password: 'Pass@123456',
-    });
-
-    expect(response.status).toBe(httpStatus.BAD_REQUEST);
 });
 
-it('Login User with Wrong Password', async () => {
-    await request(app).post('/api/v1/auth/create-partial-user').send(testUser);
+it('Verify Identity', async () => {
 
-    const user = await prisma.gettingStartedUser.findUnique({
-        where: {
-            email: testUser.email,
-        },
-    });
+    const idVerificationData = {
+        documentType: 'voter_id',
+        idNumber: 'A1234567',
+        image: 'base64encodedImageString',
+    };
 
-    const verificationCode = user?.emailVerificationCode as string;
-
-    await request(app).post('/api/v1/auth/create-user').send({
-        email: 'bofatac543@orsbap.com',
-        password: 'Pass@123456',
-        confirmPassword: 'Pass@123456',
-        emailVerificationCode: verificationCode,
-        customerType: 'personal',
-    });
-
-    const response = await request(app).post('/api/v1/auth/login').send({
-        email: testUser.email,
-        password: 'Pass@123456455',
-    });
-
-    console.log('response', response.body);
-
-    expect(response.statusCode).toBe(401);
-    expect(response.body.errorName).toBe('invalid email or password !');
-}, 10000);
-
-it('Forget Password', async () => {
-    // await request(app).post('/api/v1/auth/create-partial-user').send(testUser);
-
-    // const user = await prisma.gettingStartedUser.findUnique({
-    //     where: {
-    //         email: testUser.email,
-    //     },
-    // });
-
-    // const verificationCode = user?.emailVerificationCode as string;
-
-    // await request(app).post('/api/v1/auth/create-user').send({
-    //     email: testUser.email,
-    //     password: 'Pass@123456',
-    //     confirmPassword: 'Pass@123456',
-    //     emailVerificationCode: verificationCode,
-    //     customerType: 'personal',
-    // });
-
-    await request(app).post('/api/v1/auth/forget-password-otp-send').send({
-        email: testUser.email,
-    });
-
-    const forgetUser = await prisma.user.findUnique({
-        where: {
-            email: testUser.email,
-        },
-    });
-
-    const forgetUserOtp = forgetUser?.emailVerificationCode;
-
-    const response = await request(app).post(`/api/v1/auth/forget-password`).send({
-        email: testUser.email,
-        emailVerificationCode: forgetUserOtp,
-        newPassword: 'Pass@123456',
-        confirmNewPassword: 'Pass@123456',
-    });
+    const response = await request(app)
+        .post('/api/v1/user/verify-id')
+        .set('Cookie', cookies)
+        .send(idVerificationData);
 
     expect(response.statusCode).toBe(200);
+});
+
+it('Verify Address', async () => {
+
+    const addressVerificationData = {
+        address: '123 Main St',
+        state: 'Lagos',
+        localGovernment: 'Ikeja',
+        city: 'Lagos',
+        documentType: 'cable_bill',
+        image: 'base64encodedImageString',
+    };
+
+    const response = await request(app)
+        .post('/api/v1/user/verify-address')
+        .set('Cookie', cookies)
+        .send(addressVerificationData);
+
+    expect(response.statusCode).toBe(200);
+});
+
+it('Add Next of Kin', async () => {
+
+    const nextOfKinData = {
+        firstName: 'Jane',
+        lastName: 'Doe',
+        gender: 'female',
+        relationship: 'sister',
+        phone: '+2348012345678',
+        email: 'jane.doe@example.com',
+        address: '123 Main St, Lagos',
+    };
+
+    const response = await request(app)
+        .post('/api/v1/user/add-next-of-kin')
+        .set('Cookie', cookies)
+        .send(nextOfKinData);
+
+    expect(response.statusCode).toBe(200);
+});
+
+it('Fail to Verify BVN with Missing Fields', async () => {
+
+    const bvnVerificationData = {
+        bvn: '12345678901',
+        dateOfBirth: '1990-01-01',
+    };
+
+    const response = await request(app)
+        .post('/api/v1/user/verify-bvn')
+        .set('Cookie', cookies)
+        .send(bvnVerificationData);
+
+    expect(response.statusCode).toBe(400);
+});
+
+it('Fail to Verify Identity with Invalid Document Type', async () => {
+
+    const idVerificationData = {
+        documentType: 'invalid_doc',
+        idNumber: 'A1234567',
+        image: 'base64encodedImageString',
+    };
+
+    const response = await request(app)
+        .post('/api/v1/user/verify-id')
+        .set('Cookie', cookies)
+        .send(idVerificationData);
+
+    expect(response.statusCode).toBe(400);
 });

@@ -100,6 +100,57 @@ paths:
                 '500':
                     description: Internal server error
 
+    /user/add-card:
+        post:
+            summary: Add a new card for the user
+            tags: [User]
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/AddCardInput'
+            responses:
+                '201':
+                    description: Card added successfully
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Card'
+                '404':
+                    description: User not found
+                '500':
+                    description: Internal server error
+
+    /user/add-money/{cardId}:
+        post:
+            summary: Add money using a stored card
+            tags: [User]
+            parameters:
+                - in: path
+                  name: cardId
+                  required: true
+                  schema:
+                      type: string
+                  description: The ID of the card to be used
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/AddMoneyInput'
+            responses:
+                '200':
+                    description: Money added successfully
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Transaction'
+                '404':
+                    description: Card or User not found
+                '500':
+                    description: Internal server error
+
 components:
     schemas:
         BvnVerificationInput:
@@ -314,3 +365,89 @@ components:
                 userId:
                     type: string
                     example: 'vb5352c-cc414c-1cdcd55'
+
+        AddCardInput:
+            type: object
+            properties:
+                cardNumber:
+                    type: string
+                    example: '4111111111111111'
+                expiryDate:
+                    type: string
+                    example: '12/25'
+                cardHolderName:
+                    type: string
+                    example: 'John Doe'
+                cvv:
+                    type: string
+                    example: '123'
+            required:
+                - cardNumber
+                - expiryDate
+                - cardHolderName
+                - cvv
+
+        AddMoneyInput:
+            type: object
+            properties:
+                amount:
+                    type: number
+                    example: 5000
+            required:
+                - amount
+
+        Card:
+            type: object
+            properties:
+                id:
+                    type: string
+                    example: 'card12345'
+                cardNumber:
+                    type: string
+                    example: '4111111111111111'
+                expiryDate:
+                    type: string
+                    example: '12/25'
+                cardHolderName:
+                    type: string
+                    example: 'John Doe'
+                userId:
+                    type: string
+                    example: 'user12345'
+
+        Transaction:
+            type: object
+            properties:
+                id:
+                    type: string
+                    example: 'trans12345'
+                amount:
+                    type: number
+                    example: 5000
+                userId:
+                    type: string
+                    example: 'user12345'
+                transactionType:
+                    type: string
+                    example: 'Credit'
+                status:
+                    type: string
+                    example: 'Success'
+                accountName:
+                    type: string
+                    example: 'ABC'
+                bankName:
+                    type: string
+                    example: 'ABC'
+                bankAccount:
+                    type: string
+                    example: '1234'
+                narration:
+                    type: string
+                    example: 'Card'
+                sessionId:
+                    type: string
+                    example: '55526841025'
+                transactionId:
+                    type: string
+                    example: '541241284541'

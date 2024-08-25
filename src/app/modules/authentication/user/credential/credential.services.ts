@@ -11,13 +11,11 @@ import {
     jwtHelpers,
     prisma,
 } from '../../../../../shared';
-import { CustomerType } from '../../../../../shared/enums';
 import { MailOptions, sendMail } from '../../../../../shared/mail/mailService';
 import { CredentialSharedServices } from './credential.shared';
 import {
     TEmailOtpSend,
     TForgetPasswordInput,
-    TPartialUser,
     TPartialUserRegisterInput,
     TUserLoginInput,
     TUserLoginResponse,
@@ -32,6 +30,7 @@ const {
     findUserByToken,
     findUserById,
     updateUserById,
+    findUserByEmailAndRole,
 } = CredentialSharedServices;
 
 export class CredentialServices {
@@ -139,9 +138,8 @@ export class CredentialServices {
             );
         }
 
-        const { firstName, lastName, middleName, phone, email } =
-            partialUser as unknown as TPartialUser;
-        const { password, customerType } = user as unknown as TUserRegisterInput;
+        const { firstName, lastName, middleName, phone, email } = partialUser;
+        const { password, role } = user;
 
         const createdUser = await prisma.user.create({
             data: {
@@ -150,7 +148,7 @@ export class CredentialServices {
                 firstName,
                 middleName,
                 lastName,
-                customerType: customerType as CustomerType,
+                role,
                 phone,
             },
         });
@@ -173,7 +171,7 @@ export class CredentialServices {
     };
 
     loginUser = async (loginInput: TUserLoginInput): Promise<TUserLoginResponse | null> => {
-        const userExists = await findUserByEmail(loginInput.email);
+        const userExists = await findUserByEmailAndRole(loginInput.email, loginInput.role);
 
         if (!userExists) {
             throw new HandleApiError(
@@ -205,13 +203,18 @@ export class CredentialServices {
         //         'Your account has not been verified'
         //     );
         // }
-        const { email, role, firstName, lastName, id } = userExists;
+        const { email, role, firstName, id, profileImage } = userExists;
         const payloadData = {
             email,
             role,
             firstName,
-            lastName,
             id,
+            profileImage,
+
+            iat: Math.floor(Date.now() / 1000),
+        };
+        const refreshTokenPayloadData = {
+            email,
             iat: Math.floor(Date.now() / 1000),
         };
         const accessToken = jwtHelpers.createToken(
@@ -221,14 +224,14 @@ export class CredentialServices {
         );
 
         const refreshToken = jwtHelpers.createToken(
-            payloadData,
+            refreshTokenPayloadData,
             configs.jwtSecretRefresh as string,
             configs.jwtSecretRefreshExpired as string
         );
 
         // refresh token verification and save to db
 
-        return { accessToken, role, refreshToken, userExists };
+        return { accessToken, refreshToken, userExists };
     };
 
     otpSend = async (input: TEmailOtpSend): Promise<Omit<User, 'password'> | null> => {
@@ -293,7 +296,7 @@ export class CredentialServices {
             throw new HandleApiError(
                 errorNames.CONFLICT,
                 httpStatus.CONFLICT,
-                'new passowrd and confirm password must be same'
+                'new password and confirm password must be same'
             );
         }
 
@@ -372,16 +375,19 @@ export class CredentialServices {
     async refreshAccessToken(
         refreshToken: string
     ): Promise<Omit<TUserLoginResponse, 'userExists'> | void> {
-        const userExists = await findUserByToken(refreshToken);
-        console.log('🌼 🔥🔥 CredentialServices 🔥🔥 refreshToken🌼', refreshToken);
+       
+        // console.log('🌼 🔥🔥 CredentialServices 🔥🔥 userExists🌼', userExists);
+        const decodedData= jwtHelpers.verifyToken(
+            refreshToken,
+            configs.jwtSecretRefresh as string
+        );
+        // console.log('🌼 🔥🔥 CredentialServices 🔥🔥 decoded🌼', decoded);
+        const userExists = await findUserByEmail(decodedData.email as string);
 
         // refresh token reuse detection
         if (!userExists) {
             // refresh token niye asce but db te nai
-            const decodedData = jwtHelpers.verifyToken(
-                refreshToken,
-                configs.jwtSecretRefresh as string
-            );
+         
             if (decodedData) {
                 const hackedUser = await findUserById(decodedData.id as string);
                 if (hackedUser) {
@@ -422,13 +428,18 @@ export class CredentialServices {
             }
 
             // refresh token valid
-            const { email, role, firstName, lastName, id } = userExists;
+            const { email, role, firstName, profileImage, id } = userExists;
             const payloadData = {
                 email,
                 role,
                 firstName,
-                lastName,
                 id,
+                profileImage,
+
+                iat: Math.floor(Date.now() / 1000),
+            };
+            const refreshTokenPayloadData = {
+                email,
                 iat: Math.floor(Date.now() / 1000),
             };
             const accessToken = jwtHelpers.createToken(
@@ -438,7 +449,7 @@ export class CredentialServices {
             );
 
             const newRefreshToken = jwtHelpers.createToken(
-                payloadData,
+                refreshTokenPayloadData,
                 configs.jwtSecretRefresh as string,
                 configs.jwtSecretRefreshExpired as string
             );
@@ -446,7 +457,7 @@ export class CredentialServices {
             await updateUserById(userExists.id, {
                 refreshToken: [...newRefreshTokenArray, newRefreshToken],
             });
-            return { accessToken, role, refreshToken: newRefreshToken };
+            return { accessToken, refreshToken: newRefreshToken };
         }
     }
 

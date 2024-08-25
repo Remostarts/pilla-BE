@@ -2,15 +2,13 @@ import { Request, Response } from 'express';
 import httpStatus from 'http-status';
 
 import { GettingStartedUser, User } from '@prisma/client';
-import { cookieOptions, errorNames, HandleApiError, responseHandler } from '../../../../../shared';
+import { errorNames, HandleApiError, responseHandler } from '../../../../../shared';
 import { CredentialServices } from './credential.services';
 import { CredentialSharedServices } from './credential.shared';
 import {
-    TCookies,
     TEmailOtpSend,
     TForgetPasswordInput,
     TPartialUserRegisterInput,
-    TRefreshToken,
     TUserLoginInput,
     TUserLoginResponse,
     TUserRegisterInput,
@@ -46,36 +44,44 @@ export class CredentialControllers {
     }
 
     async loginUser(req: Request, res: Response): Promise<void> {
-        const { cookies } = req as unknown as { cookies: TCookies };
+   
         const result = await this.credentialServices.loginUser(req.body as TUserLoginInput);
         const { refreshToken, userExists, ...rest } = result as TUserLoginResponse;
 
         let newRefreshTokenArray = userExists.refreshToken as string[] | [];
-        if (cookies?.refreshToken) {
-            newRefreshTokenArray = newRefreshTokenArray.filter(
-                (rt) => rt !== cookies?.refreshToken
-            );
-            const foundToken = userExists.refreshToken?.find((rt) => rt === cookies?.refreshToken);
-            if (!foundToken) {
-                newRefreshTokenArray = [];
-                res.clearCookie('refreshToken', cookieOptions);
-            }
-        }
 
-        newRefreshTokenArray = [...newRefreshTokenArray, refreshToken];
+        if (newRefreshTokenArray.length >= 3) {
+            newRefreshTokenArray = [refreshToken];
+        } else {
+            newRefreshTokenArray = [...newRefreshTokenArray, refreshToken];
+        }
+        // if cookie contain a rt thats exist in rt array in db, then remove only that rt from rt array
+        // if (existedRefreshToken ) {
+        //     newRefreshTokenArray = newRefreshTokenArray.filter(
+        //         (rt) => rt !== existedRefreshToken
+        //     );
+        //     // if cookie contain a rt thats not exist in rt array in db, then remove all rt from db
+        //     const foundToken = userExists.refreshToken?.find((rt) => rt === existedRefreshToken );
+        //     if (!foundToken) {
+        //         newRefreshTokenArray = [];
+        //         res.clearCookie('refreshToken', cookieOptions);
+        //     }
+        // }
+
+        // newRefreshTokenArray = [...newRefreshTokenArray, refreshToken];
 
         await updateUserById(userExists.id, {
             refreshToken: newRefreshTokenArray,
         });
 
-        res.cookie('refreshToken', refreshToken, cookieOptions);
+        // res.cookie('refreshToken', refreshToken);
         // res.cookie('accessToken', rest.accessToken, cookieOptions);
 
-        responseHandler<Omit<Omit<TUserLoginResponse, 'userExists'>, 'refreshToken'>>(res, {
+        responseHandler<Omit<TUserLoginResponse, 'userExists'>>(res, {
             statusCode: httpStatus.OK,
             success: true,
             message: 'user logged in successfully!',
-            data: rest,
+            data: { ...rest, refreshToken },
         });
     }
 
@@ -104,7 +110,7 @@ export class CredentialControllers {
     }
 
     async refreshAccessToken(req: Request, res: Response): Promise<void> {
-        const { refreshToken } = req.cookies as TRefreshToken;
+        const refreshToken = req.headers.authorization;
         if (!refreshToken) {
             throw new HandleApiError(
                 errorNames.UNAUTHORIZED,
@@ -112,16 +118,13 @@ export class CredentialControllers {
                 'invalid token!'
             );
         }
-        res.clearCookie('refreshToken', cookieOptions);
-        const result = await this.credentialServices.refreshAccessToken(refreshToken);
-        const { refreshToken: newRefreshToken, ...rest } = result as TUserLoginResponse;
-        res.cookie('refreshToken', newRefreshToken, cookieOptions);
 
-        responseHandler<Omit<TUserLoginResponse, 'userExists' | 'refreshToken'>>(res, {
+        const result = await this.credentialServices.refreshAccessToken(refreshToken);
+        responseHandler<Omit<TUserLoginResponse, 'userExists'>>(res, {
             statusCode: httpStatus.OK,
             success: true,
             message: 'token refreshed successfully!',
-            data: rest,
+            data: result as Omit<TUserLoginResponse, 'userExists'>,
         });
     }
 

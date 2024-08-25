@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CustomerType } from '../../../../../shared/enums';
+import { UserRole } from '../../../../../shared/enums';
 
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,100}$/;
 const phoneNumberRegex = /^(017|018|019|016|015|014|013)\d{8}$/;
@@ -22,7 +22,7 @@ export const registerZodSchema = z.object({
                 })
                 .trim(),
 
-            customerType: z.enum([CustomerType.PERSONAL, CustomerType.BUSINESS]),
+            role: z.enum([UserRole.PERSONAL, UserRole.BUSINESS, UserRole.ADMIN]),
 
             password: z
                 .string({
@@ -51,7 +51,7 @@ export const registerZodSchema = z.object({
         ),
 });
 
-export const gettingStarteUserZodSchema = z.object({
+export const gettingStartUserZodSchema = z.object({
     body: z.object({
         email: z
             .string({
@@ -82,8 +82,8 @@ export const gettingStarteUserZodSchema = z.object({
                 required_error: 'First name is required',
             })
             .trim()
-            .min(3, 'firstName too short - should be 3 chars minimum')
-            .max(100, 'firstName too long - should be 100 chars maximum'),
+            .min(1, 'middleName too short - should be 1 chars minimum')
+            .max(100, 'middleName too long - should be 100 chars maximum'),
 
         lastName: z
             .string({
@@ -101,14 +101,22 @@ export const loginZodSchema = z.object({
         password: z.string(),
     }),
 });
-
 export const refreshTokenZodSchema = z.object({
-    cookies: z.object({
-        refreshToken: z.string({
+    headers: z.object({
+        authorization: z.string({
             required_error: 'Refresh token is required',
         }),
     }),
 });
+
+
+// export const refreshTokenZodSchema = z.object({
+//     cookies: z.object({
+//         refreshToken: z.string({
+//             required_error: 'Refresh token is required',
+//         }),
+//     }),
+// });
 export const verifyEmailZodSchema = z.object({
     // cookies: z.object({
     //     refreshToken: z.string({

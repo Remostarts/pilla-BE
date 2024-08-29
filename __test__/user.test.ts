@@ -40,7 +40,6 @@ it('Verify BVN', async () => {
 });
 
 it('Add Card', async () => {
-
     const cardDetails = {
         cardNumber: '1234567812345678',
         expiryDate: '12/25',
@@ -57,7 +56,6 @@ it('Add Card', async () => {
 });
 
 it('Add Money Using Card', async () => {
-
     const cardDetails = {
         cardNumber: '1234567812345678',
         expiryDate: '12/25',
@@ -71,7 +69,7 @@ it('Add Money Using Card', async () => {
         .send(cardDetails);
 
     const cardId = addCardResponse.body.data.id;
-    
+
     const moneyDetails = {
         amount: 1000,
     };
@@ -85,7 +83,6 @@ it('Add Money Using Card', async () => {
 });
 
 it('Verify Identity', async () => {
-
     const idVerificationData = {
         documentType: 'voter_id',
         idNumber: 'A1234567',
@@ -101,7 +98,6 @@ it('Verify Identity', async () => {
 });
 
 it('Verify Address', async () => {
-
     const addressVerificationData = {
         address: '123 Main St',
         state: 'Lagos',
@@ -120,7 +116,6 @@ it('Verify Address', async () => {
 });
 
 it('Add Next of Kin', async () => {
-
     const nextOfKinData = {
         firstName: 'Jane',
         lastName: 'Doe',
@@ -140,7 +135,6 @@ it('Add Next of Kin', async () => {
 });
 
 it('Fail to Verify BVN with Missing Fields', async () => {
-
     const bvnVerificationData = {
         bvn: '12345678901',
         dateOfBirth: '1990-01-01',
@@ -155,7 +149,6 @@ it('Fail to Verify BVN with Missing Fields', async () => {
 });
 
 it('Fail to Verify Identity with Invalid Document Type', async () => {
-
     const idVerificationData = {
         documentType: 'invalid_doc',
         idNumber: 'A1234567',

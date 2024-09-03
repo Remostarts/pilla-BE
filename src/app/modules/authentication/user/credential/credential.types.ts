@@ -55,3 +55,12 @@ export type TRefreshToken = {
     refreshToken: string;
 };
 export type TTokens = TAccessToken & TRefreshToken;
+
+export type TBankApiResponse = {
+    account_number: string;
+    account_name: string;
+    bvn: string;
+    requestSuccessful: boolean;
+    responseMessage: string;
+    responseCode: string;
+};

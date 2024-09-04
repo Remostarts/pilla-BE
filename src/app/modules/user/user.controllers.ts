@@ -10,6 +10,7 @@ import {
     TIdVerificationInput,
     TNextOfKinInput,
     TProofOfAddressInput,
+    TTransactionPinInput,
 } from './user.types';
 
 export class UserControllers {
@@ -92,7 +93,11 @@ export class UserControllers {
     async setTransactionPin(req: Request, res: Response): Promise<void> {
         const userId = req.user?.id as string;
 
-        const result = await this.userServices.setTransactionPin(userId);
+        const result = await this.userServices.setTransactionPin(
+            req.body as TTransactionPinInput,
+            userId
+        );
+        console.log(result);
 
         responseHandler<object>(res, {
             statusCode: httpStatus.OK,

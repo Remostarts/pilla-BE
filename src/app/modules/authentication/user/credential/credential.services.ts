@@ -1,6 +1,6 @@
 /* eslint-disable class-methods-use-this */
 import { GettingStartedUser, User } from '@prisma/client';
-// import axios from 'axios';
+import axios from 'axios';
 import crypto from 'crypto';
 import httpStatus from 'http-status';
 import { JsonWebTokenError, JwtPayload } from 'jsonwebtoken';
@@ -128,7 +128,7 @@ export class CredentialServices {
             );
         }
 
-        if (!user.emailVerificationCode || !partialUser?.emailVerificationExpiresAt) {
+        if (!user.emailVerificationCode || !partialUser?.emailVerificationCode) {
             throw new HandleApiError(
                 errorNames.UNAUTHORIZED,
                 httpStatus.UNAUTHORIZED,
@@ -182,7 +182,7 @@ export class CredentialServices {
         }
 
         let createdUser = {} as User;
-        // let bankApiResponse = {} as unknown;
+        let bankApiResponse = {} as unknown;
 
         await prisma.$transaction(async (tx) => {
             createdUser = await tx.user.create({
@@ -197,46 +197,46 @@ export class CredentialServices {
                 },
             });
 
-            // const bankApiUrl = `${configs.bankUrl}/PiPCreateReservedAccountNumber`;
-            // const bankApiHeaders = {
-            //     'Client-Id': configs.clientId,
-            //     'X-Auth-Signature': configs.XAuthSignature,
-            // };
-            // const bankApiBody = {
-            //     account_name: createdUser?.firstName,
-            //     bvn: '',
-            // };
+            const bankApiUrl = `${configs.bankUrl}/PiPCreateReservedAccountNumber`;
+            const bankApiHeaders = {
+                'Client-Id': configs.clientId,
+                'X-Auth-Signature': configs.XAuthSignature,
+            };
+            const bankApiBody = {
+                account_name: createdUser?.firstName,
+                bvn: '',
+            };
 
-            // bankApiResponse = await axios.post(bankApiUrl, bankApiBody, {
-            //     headers: bankApiHeaders,
-            // });
-            // // console.log('bankApiResponse', bankApiResponse);
-            // const { responseCode, account_number, account_name } =
-            //     bankApiResponse?.data as TBankApiResponse;
-            // // const responseCode = '00';
+            bankApiResponse = await axios.post(bankApiUrl, bankApiBody, {
+                headers: bankApiHeaders,
+            });
+            // console.log('bankApiResponse', bankApiResponse);
+            const { responseCode, account_number, account_name } =
+                bankApiResponse?.data as TBankApiResponse;
+            // const responseCode = '00';
 
-            // if (responseCode !== '00') {
-            //     // Handle bank API error by throwing a meaningful message
-            //     const errorMessage = getBankApiResponseMessage(responseCode);
-            //     throw new HandleApiError(
-            //         `EXTERNAL API ERROR`,
-            //         httpStatus.BAD_REQUEST,
-            //         errorMessage
-            //     );
-            // }
+            if (responseCode !== '00') {
+                // Handle bank API error by throwing a meaningful message
+                const errorMessage = getBankApiResponseMessage(responseCode);
+                throw new HandleApiError(
+                    `EXTERNAL API ERROR`,
+                    httpStatus.BAD_REQUEST,
+                    errorMessage
+                );
+            }
 
             // Log or handle the bank API success response
             // console.log('Bank API response:', bankApiResponse?.data);
-            const res = {
-                account_number: '123456',
-                account_name: 'lemul',
-                bvn: '5558484',
-            };
+            // const res = {
+            //     account_number: '123456',
+            //     account_name: firstName,
+            //     bvn: '5558484',
+            // };
 
             await tx.userAccount.create({
                 data: {
-                    accountNumber: res.account_number,
-                    accountName: res.account_name,
+                    accountNumber: account_number,
+                    accountName: account_name,
                     userId: createdUser?.id,
                 },
             });

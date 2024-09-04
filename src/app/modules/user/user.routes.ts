@@ -8,6 +8,7 @@ import {
     bnvVerificationInputZodSchema,
     idVerificationInputZodSchema,
     nextOfKinInputZodSchema,
+    pinInputZodSchema,
     proofOfAddressInputZodSchema,
 } from './user.validation';
 
@@ -56,7 +57,7 @@ router.post(
 
 router.post(
     '/setTransactionPin',
-    // zodValidator(nextOfKinInputZodSchema),
+    zodValidator(pinInputZodSchema),
     roleVerifier('personal', 'business'),
     asyncHandler(setTransactionPin.bind(userModules))
 );

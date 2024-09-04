@@ -151,3 +151,12 @@ export const addMoneyInputZodSchema = z.object({
             .min(1),
     }),
 });
+
+export const pinInputZodSchema = z.object({
+    body: z.object({
+        pin: z.string().length(4, { message: 'PIN must be exactly 4 characters long.' }),
+        confirmPin: z
+            .string()
+            .length(4, { message: 'Confirm PIN must be exactly 4 characters long.' }),
+    }),
+});

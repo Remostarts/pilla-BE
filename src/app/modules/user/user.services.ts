@@ -13,7 +13,6 @@ import httpStatus from 'http-status';
 import { errorNames, HandleApiError, prisma } from '../../../shared';
 import {
     TAddCardInput,
-    TAddMoneyInput,
     TBvnVerificationInput,
     TIdVerificationInput,
     TNextOfKinInput,
@@ -187,10 +186,10 @@ export class UserServices {
                 nextOfKins: fetchedData.next_of_kins,
                 nin: fetchedData.nin,
                 photoId: {
-                    create: fetchedData.photo_id.map((photo: any) => ({
+                    create: fetchedData.photo_id.map((photo) => ({
                         id: fetchedData.id,
                         url: photo.url,
-                        imageType: photo.image_type,
+                        imageType: photo?.image_type,
                     })),
                 },
                 enrollment: {
@@ -210,7 +209,11 @@ export class UserServices {
                 gender,
                 dateOfBirth,
                 isVerified: true,
-                userVerificationId: userVerify?.id || user.userVerification?.id,
+                userVerification: {
+                    connect: {
+                        id: userVerify?.id || user.userVerification?.id,
+                    },
+                },
             },
         });
 
@@ -286,7 +289,11 @@ export class UserServices {
                 data: {
                     nin,
                     isVerified: true,
-                    userVerificationId: userVerify?.id || user.userVerification?.id,
+                    userVerification: {
+                        connect: {
+                            id: userVerify?.id || user.userVerification?.id,
+                        },
+                    },
                 },
             });
         } else {
@@ -428,7 +435,11 @@ export class UserServices {
                     image,
                     documentType,
                     isVerified: true,
-                    userVerificationId: userVerify?.id || user.userVerification?.id,
+                    userVerification: {
+                        connect: {
+                            id: userVerify?.id || user.userVerification?.id,
+                        },
+                    },
                 },
             });
         }
@@ -509,7 +520,11 @@ export class UserServices {
                 documentType,
                 image,
                 isVerified: true,
-                userVerificationId: userVerify?.id || user.userVerification?.id,
+                userVerification: {
+                    connect: {
+                        id: userVerify?.id || user.userVerification?.id,
+                    },
+                },
             },
         });
 
@@ -599,7 +614,11 @@ export class UserServices {
                 city,
                 state,
                 isVerified: true,
-                userVerificationId: userVerify?.id || user.userVerification?.id,
+                userVerification: {
+                    connect: {
+                        id: userVerify?.id || user.userVerification?.id,
+                    },
+                },
             },
         });
 
@@ -636,8 +655,10 @@ export class UserServices {
     }
 
     async getTransactionById(transactionId: string, userId: string): Promise<Transaction | null> {
-        const transaction = await prisma.transaction.findFirst({
-            where: { id: transactionId, userId },
+        const transaction = await prisma.transaction.findUnique({
+            where: {
+                id: transactionId,
+             },
         });
 
         if (!transaction) {

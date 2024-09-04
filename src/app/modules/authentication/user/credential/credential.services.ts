@@ -4,15 +4,21 @@ import axios from 'axios';
 import crypto from 'crypto';
 import httpStatus from 'http-status';
 import { JsonWebTokenError, JwtPayload } from 'jsonwebtoken';
-import { HandleApiError, configs, errorNames, jwtHelpers, prisma } from '../../../../../shared';
-import { CustomerType } from '../../../../../shared/enums';
+
+import {
+    HandleApiError,
+    configs,
+    errorNames,
+    exclude,
+    jwtHelpers,
+    prisma,
+} from '../../../../../shared';
 import { MailOptions, sendMail } from '../../../../../shared/mail/mailService';
 import { CredentialSharedServices } from './credential.shared';
 import {
     TBankApiResponse,
     TEmailOtpSend,
     TForgetPasswordInput,
-    TPartialUser,
     TPartialUserRegisterInput,
     TUserLoginInput,
     TUserLoginResponse,
@@ -27,6 +33,7 @@ const {
     findUserByToken,
     findUserById,
     updateUserById,
+    findUserByEmailAndRole,
 } = CredentialSharedServices;
 
 const getBankApiResponseMessage = (responseCode: string): string => {
@@ -145,9 +152,20 @@ export class CredentialServices {
             );
         }
 
-        const { firstName, lastName, middleName, phone, email } =
-            partialUser as unknown as TPartialUser;
-        const { password, customerType } = user as unknown as TUserRegisterInput;
+        const { firstName, lastName, middleName, phone, email } = partialUser;
+        const { password, role } = user;
+
+        const createdUser = await prisma.user.create({
+            data: {
+                email,
+                password,
+                firstName,
+                middleName,
+                lastName,
+                role,
+                phone,
+            },
+        });
 
         const deleteGettingStartedUser = await prisma.gettingStartedUser.delete({
             where: {
@@ -227,7 +245,7 @@ export class CredentialServices {
     };
 
     loginUser = async (loginInput: TUserLoginInput): Promise<TUserLoginResponse | null> => {
-        const userExists = await findUserByEmail(loginInput.email);
+        const userExists = await findUserByEmailAndRole(loginInput.email, loginInput.role);
 
         if (!userExists) {
             throw new HandleApiError(
@@ -259,15 +277,18 @@ export class CredentialServices {
         //         'Your account has not been verified'
         //     );
         // }
-        const amount = 1000;
-        const { email, role, firstName, lastName, id } = userExists;
+
+        const { email, role, firstName, id, profileImage } = userExists;
         const payloadData = {
             email,
             role,
             firstName,
-            lastName,
             id,
-            amount,
+            profileImage,
+            iat: Math.floor(Date.now() / 1000),
+        };
+        const refreshTokenPayloadData = {
+            email,
             iat: Math.floor(Date.now() / 1000),
         };
         const accessToken = jwtHelpers.createToken(
@@ -277,14 +298,14 @@ export class CredentialServices {
         );
 
         const refreshToken = jwtHelpers.createToken(
-            payloadData,
+            refreshTokenPayloadData,
             configs.jwtSecretRefresh as string,
             configs.jwtSecretRefreshExpired as string
         );
 
         // refresh token verification and save to db
 
-        return { accessToken, role, refreshToken, userExists };
+        return { accessToken, refreshToken, userExists };
     };
 
     otpSend = async (input: TEmailOtpSend): Promise<Omit<User, 'password'> | null> => {
@@ -349,7 +370,7 @@ export class CredentialServices {
             throw new HandleApiError(
                 errorNames.CONFLICT,
                 httpStatus.CONFLICT,
-                'new passowrd and confirm password must be same'
+                'new password and confirm password must be same'
             );
         }
 
@@ -428,16 +449,19 @@ export class CredentialServices {
     async refreshAccessToken(
         refreshToken: string
     ): Promise<Omit<TUserLoginResponse, 'userExists'> | void> {
-        const userExists = await findUserByToken(refreshToken);
-        console.log('🌼 🔥🔥 CredentialServices 🔥🔥 refreshToken🌼', refreshToken);
+       
+        // console.log('🌼 🔥🔥 CredentialServices 🔥🔥 userExists🌼', userExists);
+        const decodedData= jwtHelpers.verifyToken(
+            refreshToken,
+            configs.jwtSecretRefresh as string
+        );
+        // console.log('🌼 🔥🔥 CredentialServices 🔥🔥 decoded🌼', decoded);
+        const userExists = await findUserByEmail(decodedData.email as string);
 
         // refresh token reuse detection
         if (!userExists) {
             // refresh token niye asce but db te nai
-            const decodedData = jwtHelpers.verifyToken(
-                refreshToken,
-                configs.jwtSecretRefresh as string
-            );
+         
             if (decodedData) {
                 const hackedUser = await findUserById(decodedData.id as string);
                 if (hackedUser) {
@@ -478,13 +502,18 @@ export class CredentialServices {
             }
 
             // refresh token valid
-            const { email, role, firstName, lastName, id } = userExists;
+            const { email, role, firstName, profileImage, id } = userExists;
             const payloadData = {
                 email,
                 role,
                 firstName,
-                lastName,
                 id,
+                profileImage,
+
+                iat: Math.floor(Date.now() / 1000),
+            };
+            const refreshTokenPayloadData = {
+                email,
                 iat: Math.floor(Date.now() / 1000),
             };
             const accessToken = jwtHelpers.createToken(
@@ -494,7 +523,7 @@ export class CredentialServices {
             );
 
             const newRefreshToken = jwtHelpers.createToken(
-                payloadData,
+                refreshTokenPayloadData,
                 configs.jwtSecretRefresh as string,
                 configs.jwtSecretRefreshExpired as string
             );
@@ -502,7 +531,7 @@ export class CredentialServices {
             await updateUserById(userExists.id, {
                 refreshToken: [...newRefreshTokenArray, newRefreshToken],
             });
-            return { accessToken, role, refreshToken: newRefreshToken };
+            return { accessToken, refreshToken: newRefreshToken };
         }
     }
 

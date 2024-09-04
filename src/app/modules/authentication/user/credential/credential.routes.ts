@@ -4,7 +4,7 @@ import { CredentialModules } from './credential.modules';
 import {
     forgetPasswordOtpSendZodSchema,
     forgetPasswordZodSchema,
-    gettingStarteUserZodSchema,
+    gettingStartUserZodSchema,
     loginZodSchema,
     refreshTokenZodSchema,
     registerZodSchema,
@@ -23,7 +23,7 @@ const {
 
 router.post(
     '/create-partial-user',
-    zodValidator(gettingStarteUserZodSchema),
+    zodValidator(gettingStartUserZodSchema),
     asyncHandler(createPartialUser.bind(credentialModules))
 );
 router.post(
@@ -46,7 +46,7 @@ router.post(
     zodValidator(forgetPasswordZodSchema),
     asyncHandler(forgetPassword.bind(credentialModules))
 );
-router.get(
+router.post(
     '/refresh-token',
     zodValidator(refreshTokenZodSchema),
     asyncHandler(refreshAccessToken.bind(credentialModules))

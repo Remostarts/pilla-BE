@@ -1,11 +1,22 @@
 import { User } from '@prisma/client';
-import { prisma } from '../../../../../shared';
+import { prisma, UserRole } from '../../../../../shared';
 import { TPartialUser, TUserWithProfile } from './credential.types';
 
 export class CredentialSharedServices {
     static async findUserByEmail(email: string): Promise<TUserWithProfile | null> {
         return prisma.user.findUnique({
             where: { email },
+            include: { profile: true },
+        });
+    }
+
+    static async findUserByEmailAndRole(
+        email: string,
+        role: UserRole = UserRole.PERSONAL
+    ): Promise<TUserWithProfile | null> {
+        return prisma.user.findUnique({
+            where: { email, role },
+
             include: { profile: true },
         });
     }
@@ -23,15 +34,26 @@ export class CredentialSharedServices {
         return user;
     }
 
-    static async findUserByToken(token: string): Promise<User | null> {
-        return prisma.user.findFirst({
+    static async findUserByToken(token: string) {
+       const user =await  prisma.user.findFirst({
             where: {
                 refreshToken: {
                     has: token,
                 },
             },
         });
-    }
+
+        return user
+     }
+    // static async findUserByToken(token: string): Promise<User | null> {
+    //     return prisma.user.findFirst({
+    //         where: {
+    //             refreshToken: {
+    //                 has: token,
+    //             },
+    //         },
+    //     });
+    // }
 
     static async findUserByPhoneNumber(phone: string): Promise<User | null> {
         return prisma.user.findUnique({

@@ -1,7 +1,7 @@
 export enum UserRole {
-    SUPER_ADMIN = 'super_admin',
+    PERSONAL = 'personal',
+    BUSINESS = 'business',
     ADMIN = 'admin',
-    USER = 'user',
 }
 export enum AdminPermissions {
     ALL = 'all',
@@ -9,9 +9,4 @@ export enum AdminPermissions {
     USER_MANAGER = 'user_manager',
     SERVICE_MANAGER = 'service_manager',
     booking_MANAGER = 'booking_manager',
-}
-
-export enum CustomerType {
-    PERSONAL = 'personal',
-    BUSINESS = 'business',
 }

@@ -18,21 +18,37 @@ export const bnvVerificationInputZodSchema = z.object({
 });
 
 export const idVerificationInputZodSchema = z.object({
-    body: z.object({
-        documentType: z.enum([
-            IdVerificationDocType.voter_id,
-            IdVerificationDocType.driver_license,
-            IdVerificationDocType.international_passport,
-        ]),
+    body: z
+        .object({
+            documentType: z
+                .enum([
+                    IdVerificationDocType.voter_id,
+                    IdVerificationDocType.driver_license,
+                    IdVerificationDocType.international_passport,
+                ])
+                .optional(),
 
-        idNumber: z.string({
-            required_error: 'id number is required',
-        }),
+            idNumber: z.string().optional(),
 
-        image: z.string({
-            required_error: 'image is required',
-        }),
-    }),
+            image: z.string().optional(),
+
+            nin: z.string().optional(),
+        })
+        .refine(
+            (data) => {
+                // If 'nin' is provided, 'documentType', 'idNumber', and 'image' are not required
+                if (data.nin) {
+                    return true; // 'nin' is present, so skip the check
+                }
+                // If 'nin' is not provided, then all three fields must be present
+                return data.documentType && data.idNumber && data.image;
+            },
+            {
+                message:
+                    "Either 'nin' must be provided or 'documentType', 'idNumber', and 'image' must be provided.",
+                path: ['body'],
+            }
+        ),
 });
 
 export const proofOfAddressInputZodSchema = z.object({
@@ -100,6 +116,9 @@ export const nextOfKinInputZodSchema = z.object({
         address: z.string({
             required_error: 'address is required',
         }),
+        state: z.string().min(1, 'State is required'),
+        localGovernment: z.string().min(1, 'Local Government is required'),
+        city: z.string().min(1, 'City is required'),
     }),
 });
 

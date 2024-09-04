@@ -76,6 +76,32 @@ export class UserControllers {
         });
     }
 
+    async getVerificationStatus(req: Request, res: Response): Promise<void> {
+        const userId = req.user?.id as string;
+
+        const getStatus = await this.userServices.getVerificationStatus(userId);
+
+        responseHandler<object>(res, {
+            statusCode: httpStatus.OK,
+            success: true,
+            message: 'Status retrieved successfully',
+            data: getStatus,
+        });
+    }
+
+    async setTransactionPin(req: Request, res: Response): Promise<void> {
+        const userId = req.user?.id as string;
+
+        const result = await this.userServices.setTransactionPin(userId);
+
+        responseHandler<object>(res, {
+            statusCode: httpStatus.OK,
+            success: true,
+            message: 'Pin set successfully',
+            data: {},
+        });
+    }
+
     async getAllTransactions(req: Request, res: Response): Promise<void> {
         const userId = req.user?.id as string;
 

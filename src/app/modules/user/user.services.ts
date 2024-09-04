@@ -18,6 +18,7 @@ import {
     TIdVerificationInput,
     TNextOfKinInput,
     TProofOfAddressInput,
+    TTransactionPinInput,
 } from './user.types';
 // import axios from 'axios';
 
@@ -529,7 +530,18 @@ export class UserServices {
     }
 
     async nextOfKin(input: TNextOfKinInput, userId: string): Promise<NextOfKin | null> {
-        const { firstName, lastName, gender, relationship, phone, email, address } = input;
+        const {
+            firstName,
+            lastName,
+            gender,
+            relationship,
+            phone,
+            email,
+            address,
+            localGovernment,
+            state,
+            city,
+        } = input;
 
         const user = await prisma.user.findUnique({
             where: { id: userId },
@@ -583,6 +595,9 @@ export class UserServices {
                 phone,
                 email,
                 address,
+                localGovernment,
+                city,
+                state,
                 isVerified: true,
                 userVerificationId: userVerify?.id || user.userVerification?.id,
             },
@@ -716,5 +731,111 @@ export class UserServices {
         });
 
         return transaction;
+    }
+
+    async getVerificationStatus(userId: string): Promise<object> {
+        const userVer = await prisma.userVerification.findUnique({
+            where: {
+                userId,
+            },
+            select: {
+                bankVerification: {
+                    select: {
+                        isVerified: true,
+                    },
+                },
+                identityVerification: {
+                    select: {
+                        isVerified: true,
+                    },
+                },
+                proofOfAddress: {
+                    select: {
+                        isVerified: true,
+                    },
+                },
+                nextOfKin: {
+                    select: {
+                        isVerified: true,
+                    },
+                },
+            },
+        });
+
+        const ver = await prisma.user.findUnique({
+            where: {
+                id: userId,
+            },
+        });
+        const userAcc = await prisma.userAccount.findUnique({
+            where: {
+                userId,
+            },
+        });
+
+        // const bvnVer = await prisma.bankVerification.findUnique({
+        //     where: {
+        //         userVerificationId: userVer?.id,
+        //     },
+        // });
+        // const idVer = await prisma.identityVerification.findUnique({
+        //     where: {
+        //         userVerificationId: userVer?.id,
+        //     },
+        // });
+        // const addVer = await prisma.proofOfAddress.findUnique({
+        //     where: {
+        //         userVerificationId: userVer?.id,
+        //     },
+        // });
+        // const kinVer = await prisma.nextOfKin.findUnique({
+        //     where: {
+        //         userVerificationId: userVer?.id,
+        //     },
+        // });
+
+        return {
+            userVerification: ver?.isVerified || false,
+            bankVerification: userVer?.bankVerification?.isVerified || false,
+            identityVerification: userVer?.identityVerification?.isVerified || false,
+            proofOfAddress: userVer?.proofOfAddress?.isVerified || false,
+            nextOfKin: userVer?.nextOfKin?.isVerified || false,
+            transactionPin: !!userAcc?.transactionPin,
+        };
+    }
+
+    async setTransactionPin(input: TTransactionPinInput, userId: string): Promise<object> {
+        const user = await prisma.user.findUnique({
+            where: {
+                id: userId,
+            },
+        });
+
+        if (!user) {
+            throw new HandleApiError(
+                errorNames.NOT_FOUND,
+                httpStatus.NOT_FOUND,
+                'user not found !'
+            );
+        }
+
+        if (input.pin !== input.confirmPin) {
+            throw new HandleApiError(
+                errorNames.CONFLICT,
+                httpStatus.CONFLICT,
+                'Pin and Confirm Pin must be the same'
+            );
+        }
+
+        await prisma.userAccount.update({
+            where: {
+                userId,
+            },
+            data: {
+                transactionPin: input.pin,
+            },
+        });
+
+        return {};
     }
 }

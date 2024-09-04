@@ -53,6 +53,7 @@ model UserAccount {
   amount            Float             @default(0)    
   transactions      Transaction[] 
   cards             Card[]  
+  transactionPin    String?
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 
@@ -136,7 +137,10 @@ model NextOfKin {
   relationship    String        
   phone           String        
   email           String        
-  address         String    
+  address         String
+  localGovernment String
+  city            String
+  state           String
   isVerified      Boolean         @default(false)    
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt

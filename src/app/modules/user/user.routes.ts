@@ -22,6 +22,8 @@ const {
     getTransactionById,
     addCard,
     addMoneyUsingCard,
+    getVerificationStatus,
+    setTransactionPin,
 } = userModules.userControllers;
 
 router.post(
@@ -52,6 +54,13 @@ router.post(
     asyncHandler(nextOfKin.bind(userModules))
 );
 
+router.post(
+    '/setTransactionPin',
+    // zodValidator(nextOfKinInputZodSchema),
+    roleVerifier('personal', 'business'),
+    asyncHandler(setTransactionPin.bind(userModules))
+);
+
 router.get(
     '/transactions',
     roleVerifier('personal', 'business'),
@@ -76,6 +85,12 @@ router.post(
     zodValidator(addMoneyInputZodSchema),
     roleVerifier('personal', 'business'),
     asyncHandler(addMoneyUsingCard.bind(userModules))
+);
+
+router.get(
+    '/getVerificationStatus',
+    roleVerifier('personal', 'business'),
+    asyncHandler(getVerificationStatus.bind(userModules))
 );
 
 export const userRoutes = router;

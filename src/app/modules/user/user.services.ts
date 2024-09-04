@@ -18,7 +18,7 @@ import {
     TNextOfKinInput,
     TProofOfAddressInput,
 } from './user.types';
-import axios from 'axios';
+// import axios from 'axios';
 
 export class UserServices {
     async bvnVerification(
@@ -72,9 +72,9 @@ export class UserServices {
 
         // TODO: BVN Verification Logic
 
-        const bvnApiUrl = 'https://api.okraapi.com/v2/sandbox/identity/getByBvn'; // Replace with actual URL
-        const authToken =
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NTExNDNiYWYxZTQ5NDY4OTAzZmIxYjEiLCJpYXQiOjE2OTU2MzAyNjZ9.RcTIh1fsC8tKaG87YF-l53byK543Ek6i4iF7i8K1oNg'; // Replace with actual token
+        // const bvnApiUrl = 'https://api.okraapi.com/v2/sandbox/identity/getByBvn'; // Replace with actual URL
+        // const authToken =
+        //     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NTExNDNiYWYxZTQ5NDY4OTAzZmIxYjEiLCJpYXQiOjE2OTU2MzAyNjZ9.RcTIh1fsC8tKaG87YF-l53byK543Ek6i4iF7i8K1oNg'; // Replace with actual token
         // let fetchedData = {};
 
         // try {
@@ -224,8 +224,7 @@ export class UserServices {
         input: TIdVerificationInput,
         userId: string
     ): Promise<IdentityVerification | null> {
-        const { documentType, image, idNumber } = input;
-        const nin = '';
+        const { documentType, image, idNumber, nin } = input;
 
         const user = await prisma.user.findUnique({
             where: { id: userId },
@@ -271,9 +270,9 @@ export class UserServices {
         }
 
         // TODO: ID Verification Logic
-        const bvnApiUrl = 'https://api.okraapi.com/v2/sandbox/identity/getByNin';
-        const authToken =
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NTExNDNiYWYxZTQ5NDY4OTAzZmIxYjEiLCJpYXQiOjE2OTU2MzAyNjZ9.RcTIh1fsC8tKaG87YF-l53byK543Ek6i4iF7i8K1oNg';
+        // const bvnApiUrl = 'https://api.okraapi.com/v2/sandbox/identity/getByNin';
+        // const authToken =
+        //     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NTExNDNiYWYxZTQ5NDY4OTAzZmIxYjEiLCJpYXQiOjE2OTU2MzAyNjZ9.RcTIh1fsC8tKaG87YF-l53byK543Ek6i4iF7i8K1oNg';
 
         // let fetchedData = {};
 
@@ -306,93 +305,93 @@ export class UserServices {
         //     );
         // }
 
-        const fetchedData = {
-            id: '644acc50924488ad38676348',
-            firstname: 'Fusuyi',
-            middlename: 'Micheal',
-            lastname: 'Tobi',
-            fullname: 'Fusuyi Micheal Tobi',
-            dob: '1989-04-16',
-            bvn: '22165416979',
-            gender: 'Male',
-            customer: {
-                _id: '6424c0638d3bc1046d4b0929',
-                name: 'Fusuyi Micheal Tobi',
-            },
-            verification_country: 'NG',
-            created_at: '2023-04-27T19:26:07.519Z',
-            aliases: [],
-            phone: ['08038811523'],
-            email: [],
-            address: ['23 Fusho Street king house Lagos'],
-            nationality: 'Nigeria',
-            lga_of_origin: 'Ogbomosho North',
-            lga_of_residence: 'Lagos Mainland',
-            state_of_origin: 'Oyo State',
-            state_of_residence: 'Lagos State',
-            marital_status: 'Single',
-            next_of_kins: [],
-            nin: '97340343221',
-            photo_id: [
-                {
-                    url: 'https://djrzfsrexmrry.cloudfront.net/MjIxNj.png',
-                    image_type: 'bvn_photo',
-                },
-            ],
-            enrollment: {
-                bank: '050',
-                branch: '100 Eng Macaulay',
-                registration_date: '1989-04-16',
-            },
-        };
+        // const fetchedData = {
+        //     id: '644acc50924488ad38676348',
+        //     firstname: 'Fusuyi',
+        //     middlename: 'Micheal',
+        //     lastname: 'Tobi',
+        //     fullname: 'Fusuyi Micheal Tobi',
+        //     dob: '1989-04-16',
+        //     bvn: '22165416979',
+        //     gender: 'Male',
+        //     customer: {
+        //         _id: '6424c0638d3bc1046d4b0929',
+        //         name: 'Fusuyi Micheal Tobi',
+        //     },
+        //     verification_country: 'NG',
+        //     created_at: '2023-04-27T19:26:07.519Z',
+        //     aliases: [],
+        //     phone: ['08038811523'],
+        //     email: [],
+        //     address: ['23 Fusho Street king house Lagos'],
+        //     nationality: 'Nigeria',
+        //     lga_of_origin: 'Ogbomosho North',
+        //     lga_of_residence: 'Lagos Mainland',
+        //     state_of_origin: 'Oyo State',
+        //     state_of_residence: 'Lagos State',
+        //     marital_status: 'Single',
+        //     next_of_kins: [],
+        //     nin: '97340343221',
+        //     photo_id: [
+        //         {
+        //             url: 'https://djrzfsrexmrry.cloudfront.net/MjIxNj.png',
+        //             image_type: 'bvn_photo',
+        //         },
+        //     ],
+        //     enrollment: {
+        //         bank: '050',
+        //         branch: '100 Eng Macaulay',
+        //         registration_date: '1989-04-16',
+        //     },
+        // };
 
-        await prisma.bvnResponse.create({
-            data: {
-                id: fetchedData.id,
-                firstname: fetchedData.firstname,
-                middlename: fetchedData.middlename,
-                lastname: fetchedData.lastname,
-                fullname: fetchedData.fullname,
-                dob: new Date(fetchedData.dob),
-                bvn: fetchedData.bvn,
-                gender: fetchedData.gender,
-                customer: {
-                    create: {
-                        id: fetchedData.customer._id,
-                        name: fetchedData.customer.name,
-                    },
-                },
-                verificationCountry: fetchedData.verification_country,
-                createdAt: new Date(fetchedData.created_at),
-                aliases: fetchedData.aliases,
-                phone: fetchedData.phone,
-                email: fetchedData.email,
-                address: fetchedData.address,
-                nationality: fetchedData.nationality,
-                lgaOfOrigin: fetchedData.lga_of_origin,
-                lgaOfResidence: fetchedData.lga_of_residence,
-                stateOfOrigin: fetchedData.state_of_origin,
-                stateOfResidence: fetchedData.state_of_residence,
-                maritalStatus: fetchedData.marital_status,
-                nextOfKins: fetchedData.next_of_kins,
-                nin: fetchedData.nin,
-                photoId: {
-                    create: fetchedData.photo_id.map((photo: any) => ({
-                        id: fetchedData.id,
-                        url: photo.url,
-                        imageType: photo.image_type,
-                    })),
-                },
-                enrollment: {
-                    create: {
-                        id: fetchedData.id,
-                        bank: fetchedData.enrollment.bank,
-                        branch: fetchedData.enrollment.branch,
-                        registrationDate: new Date(fetchedData.enrollment.registration_date),
-                    },
-                },
-            },
-        });
+        // await prisma.bvnResponse.create({
+        //     data: {
+        //         id: fetchedData.id,
+        //         firstname: fetchedData.firstname,
+        //         middlename: fetchedData.middlename,
+        //         lastname: fetchedData.lastname,
+        //         fullname: fetchedData.fullname,
+        //         dob: new Date(fetchedData.dob),
+        //         bvn: fetchedData.bvn,
+        //         gender: fetchedData.gender,
+        //         customer: {
+        //             create: {
+        //                 id: fetchedData.customer._id,
+        //                 name: fetchedData.customer.name,
+        //             },
+        //         },
+        //         verificationCountry: fetchedData.verification_country,
+        //         createdAt: new Date(fetchedData.created_at),
+        //         aliases: fetchedData.aliases,
+        //         phone: fetchedData.phone,
+        //         email: fetchedData.email,
+        //         address: fetchedData.address,
+        //         nationality: fetchedData.nationality,
+        //         lgaOfOrigin: fetchedData.lga_of_origin,
+        //         lgaOfResidence: fetchedData.lga_of_residence,
+        //         stateOfOrigin: fetchedData.state_of_origin,
+        //         stateOfResidence: fetchedData.state_of_residence,
+        //         maritalStatus: fetchedData.marital_status,
+        //         nextOfKins: fetchedData.next_of_kins,
+        //         nin: fetchedData.nin,
+        //         photoId: {
+        //             create: fetchedData.photo_id.map((photo: any) => ({
+        //                 id: fetchedData.id,
+        //                 url: photo.url,
+        //                 imageType: photo.image_type,
+        //             })),
+        //         },
+        //         enrollment: {
+        //             create: {
+        //                 id: fetchedData.id,
+        //                 bank: fetchedData.enrollment.bank,
+        //                 branch: fetchedData.enrollment.branch,
+        //                 registrationDate: new Date(fetchedData.enrollment.registration_date),
+        //             },
+        //         },
+        //     },
+        // });
 
         const idDetails = await prisma.identityVerification.create({
             data: {

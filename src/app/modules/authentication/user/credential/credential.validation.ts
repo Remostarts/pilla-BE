@@ -109,7 +109,6 @@ export const refreshTokenZodSchema = z.object({
     }),
 });
 
-
 // export const refreshTokenZodSchema = z.object({
 //     cookies: z.object({
 //         refreshToken: z.string({

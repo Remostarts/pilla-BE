@@ -39,12 +39,11 @@ export class CredentialControllers {
             statusCode: httpStatus.CREATED,
             success: true,
             message: 'user created successfully!',
-            data: result,
+            data: result as Omit<User, 'password'>,
         });
     }
 
     async loginUser(req: Request, res: Response): Promise<void> {
-   
         const result = await this.credentialServices.loginUser(req.body as TUserLoginInput);
         const { refreshToken, userExists, ...rest } = result as TUserLoginResponse;
 

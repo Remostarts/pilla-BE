@@ -10,6 +10,7 @@ export type TIdVerificationInput = {
     documentType: IdVerificationDocType;
     idNumber: string;
     image: string;
+    nin: string;
 };
 
 export type TProofOfAddressInput = {

@@ -14,7 +14,7 @@ export type TUserRegisterInput = {
     password: string;
     confirmPasswords: string;
     emailVerificationCode: string;
-    role:  UserRole;
+    role: UserRole;
 };
 
 export type TForgetPasswordInput = {
@@ -44,7 +44,6 @@ export type TUserLoginResponse = {
     userExists: User;
     accessToken: string;
     refreshToken: string;
-
 };
 export type TCookies = {
     refreshToken: string;

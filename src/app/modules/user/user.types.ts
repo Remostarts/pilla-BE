@@ -3,7 +3,7 @@ import { AddressProofDocType, IdVerificationDocType } from '@prisma/client';
 export type TBvnVerificationInput = {
     bvn: string;
     gender: string;
-    dateOfBirth: string;
+    dateOfBirth: Date;
 };
 
 export type TIdVerificationInput = {

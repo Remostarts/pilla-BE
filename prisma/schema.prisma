@@ -100,9 +100,10 @@ model BankVerification {
 
 model IdentityVerification {
   id                      String                    @id @default(uuid())
-  documentType            IdVerificationDocType   
-  idNumber                String                    @unique
-  image                   String                    
+  nin                     String?                   @unique
+  documentType            IdVerificationDocType?   
+  idNumber                String?                   @unique
+  image                   String?                    
   isVerified              Boolean                   @default(false)
   createdAt               DateTime                  @default(now())
   updatedAt               DateTime                  @updatedAt

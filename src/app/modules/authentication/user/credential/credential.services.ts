@@ -24,6 +24,7 @@ import {
     TUserLoginResponse,
     TUserRegisterInput,
 } from './credential.types';
+import axios from 'axios';
 
 const {
     findUserByEmail,
@@ -182,7 +183,7 @@ export class CredentialServices {
         }
 
         let createdUser = {} as User;
-        // let bankApiResponse = {} as unknown;
+        let bankApiResponse = {} as unknown;
 
         await prisma.$transaction(async (tx) => {
             createdUser = await tx.user.create({
@@ -197,46 +198,49 @@ export class CredentialServices {
                 },
             });
 
+            const bankApiUrl = 'http://154.113.16.142:8088/appdevapi/api/PiPCreateReservedAccountNumber';
             // const bankApiUrl = `${configs.bankUrl}/PiPCreateReservedAccountNumber`;
-            // const bankApiHeaders = {
-            //     'Client-Id': configs.clientId,
-            //     'X-Auth-Signature': configs.XAuthSignature,
-            // };
-            // const bankApiBody = {
-            //     account_name: createdUser?.firstName,
-            //     bvn: '',
-            // };
+            const bankApiHeaders = {
+                // 'Client-Id': configs.clientId as string,
+                // 'X-Auth-Signature': configs.XAuthSignature as string,
+                'Client-Id': 'dGVzdF9Qcm92aWR1cw==',
+                'X-Auth-Signature':'BE09BEE831CF262226B426E39BD1092AF84DC63076D4174FAC78A2261F9A3D6E59744983B8326B69CDF2963FE314DFC89635CFA37A40596508DD6EAAB09402C7',
+            };
+            const bankApiBody = {
+                account_name: createdUser?.firstName,
+                bvn: '',
+            };
 
-            // bankApiResponse = await axios.post(bankApiUrl, bankApiBody, {
-            //     headers: bankApiHeaders,
-            // });
-            // // console.log('bankApiResponse', bankApiResponse);
-            // const { responseCode, account_number, account_name } =
-            //     bankApiResponse?.data as TBankApiResponse;
-            // // const responseCode = '00';
+            bankApiResponse = await axios.post(bankApiUrl, bankApiBody, {
+                headers: bankApiHeaders,
+            });
+            // console.log('bankApiResponse', bankApiResponse);
+            const { responseCode, account_number, account_name } =
+                bankApiResponse?.data as TBankApiResponse;
+            // const responseCode = '00';
 
-            // if (responseCode !== '00') {
-            //     // Handle bank API error by throwing a meaningful message
-            //     const errorMessage = getBankApiResponseMessage(responseCode);
-            //     throw new HandleApiError(
-            //         `EXTERNAL API ERROR`,
-            //         httpStatus.BAD_REQUEST,
-            //         errorMessage
-            //     );
-            // }
+            if (responseCode !== '00') {
+                // Handle bank API error by throwing a meaningful message
+                // const errorMessage = getBankApiResponseMessage(responseCode);
+                throw new HandleApiError(
+                    `EXTERNAL API ERROR`,
+                    httpStatus.BAD_REQUEST,
+                    'error'
+                );
+            }
 
             // Log or handle the bank API success response
             // console.log('Bank API response:', bankApiResponse?.data);
-            const res = {
-                account_number: '123456',
-                account_name: 'lemul',
-                bvn: '5558484',
-            };
+            // const res = {
+            //     account_number: '123456',
+            //     account_name: 'lemul',
+            //     bvn: '5558484',
+            // };
 
             await tx.userAccount.create({
                 data: {
-                    accountNumber: res.account_number,
-                    accountName: res.account_name,
+                    accountNumber: account_number,
+                    accountName: account_name,
                     userId: createdUser?.id,
                 },
             });

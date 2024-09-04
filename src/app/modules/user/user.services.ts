@@ -122,7 +122,7 @@ export class UserServices {
             lastname: 'Tobi',
             fullname: 'Fusuyi Micheal Tobi',
             dob: '1989-04-16',
-            bvn: '22165416979',
+            bvn: randomUUID(),
             gender: 'Male',
             customer: {
                 _id: randomUUID(),
@@ -141,7 +141,7 @@ export class UserServices {
             state_of_residence: 'Lagos State',
             marital_status: 'Single',
             next_of_kins: [],
-            nin: '97340343221',
+            nin: randomUUID(),
             photo_id: [
                 {
                     url: 'https://djrzfsrexmrry.cloudfront.net/MjIxNj.png',
@@ -194,7 +194,7 @@ export class UserServices {
                 },
                 enrollment: {
                     create: {
-                        id: fetchedData.id,
+                        id: randomUUID(),
                         bank: fetchedData.enrollment.bank,
                         branch: fetchedData.enrollment.branch,
                         registrationDate: new Date(fetchedData.enrollment.registration_date),

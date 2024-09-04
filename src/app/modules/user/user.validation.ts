@@ -1,4 +1,4 @@
-import { AddressProofDocType, IdVerificationDocType } from '@prisma/client';
+import { AddressProofDocType } from '@prisma/client';
 import { z } from 'zod';
 
 export const bnvVerificationInputZodSchema = z.object({
@@ -20,13 +20,7 @@ export const bnvVerificationInputZodSchema = z.object({
 export const idVerificationInputZodSchema = z.object({
     body: z
         .object({
-            documentType: z
-                .enum([
-                    IdVerificationDocType.voter_id,
-                    IdVerificationDocType.driver_license,
-                    IdVerificationDocType.international_passport,
-                ])
-                .optional(),
+            documentType: z.string().optional(),
 
             idNumber: z.string().optional(),
 

@@ -14,7 +14,7 @@ export type TUserRegisterInput = {
     password: string;
     confirmPasswords: string;
     emailVerificationCode: string;
-    role:  UserRole;
+    role: UserRole;
 };
 
 export type TForgetPasswordInput = {
@@ -44,7 +44,6 @@ export type TUserLoginResponse = {
     userExists: User;
     accessToken: string;
     refreshToken: string;
-
 };
 export type TCookies = {
     refreshToken: string;
@@ -57,3 +56,12 @@ export type TRefreshToken = {
     refreshToken: string;
 };
 export type TTokens = TAccessToken & TRefreshToken;
+
+export type TBankApiResponse = {
+    account_number: string;
+    account_name: string;
+    bvn: string;
+    requestSuccessful: boolean;
+    responseMessage: string;
+    responseCode: string;
+};

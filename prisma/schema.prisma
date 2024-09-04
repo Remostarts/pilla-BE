@@ -14,7 +14,7 @@ model User {
   id                         String                @id @default(uuid())
   email                      String                @unique
   phone                      String?               @unique
-  role                       UserRoles                 @default(personal)
+  role                       UserRoles             @default(personal)
   password                   String?
   firstName                  String
   middleName                 String
@@ -29,24 +29,48 @@ model User {
   phoneVerificationCode      String?
   phoneVerificationExpiresAt DateTime?
   refreshToken               String[]
-  bankVerification           BankVerification?
-  identityVerification       IdentityVerification?
-  proofOfAddress             ProofOfAddress?
-  nextOfKin                  NextOfKin?
-  amount                     Int                   @default(0)
-  transactions               Transaction[]
-  cards                      Card[]
+  userVerification           UserVerification?
+  userAccount                UserAccount?
+}
+
+model UserVerification {
+  id                       String                    @id @default(uuid())
+  bankVerification         BankVerification?
+  identityVerification     IdentityVerification?
+  proofOfAddress           ProofOfAddress?
+  nextOfKin                NextOfKin?
+  createdAt                DateTime                  @default(now())
+  updatedAt                DateTime                  @updatedAt
+
+  userId                   String                    @unique
+  user                     User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserAccount {
+  id                String            @id @default(uuid())
+  accountName       String            @unique
+  accountNumber     String            @unique
+  amount            Float             @default(0)    
+  transactions      Transaction[] 
+  cards             Card[]  
+  transactionPin    String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  userId            String            @unique
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Profile {
-  id        String   @id @default(uuid())
-  road      String?
-  house     String?
-  city      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  userId    String   @unique
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id            String        @id @default(uuid())
+  road          String?     
+  house         String?     
+  city          String?     
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  userId        String        @unique
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model GettingStartedUser {
@@ -63,101 +87,157 @@ model GettingStartedUser {
 }
 
 model BankVerification {
-  id          String   @id @default(uuid())
-  bvn         String   @unique
-  gender      String
-  dateOfBirth String
-  isVerified  Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                      String              @id @default(uuid())
+  bvn                     String              @unique
+  gender                  String            
+  dateOfBirth             DateTime            
+  isVerified              Boolean             @default(false)
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
 
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userVerificationId      String              @unique
+  userVerification        UserVerification    @relation(fields: [userVerificationId], references: [id], onDelete: Cascade)
 }
 
 model IdentityVerification {
-  id           String                @id @default(uuid())
-  documentType IdVerificationDocType
-  idNumber     String                @unique
-  image        String
-  isVerified   Boolean               @default(false)
-  createdAt    DateTime              @default(now())
-  updatedAt    DateTime              @updatedAt
+  id                      String                    @id @default(uuid())
+  nin                     String?                   @unique
+  documentType            IdVerificationDocType?   
+  idNumber                String?                   @unique
+  image                   String?                    
+  isVerified              Boolean                   @default(false)
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime                  @updatedAt
 
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userVerificationId      String                    @unique
+  userVerification        UserVerification          @relation(fields: [userVerificationId], references: [id], onDelete: Cascade)
 }
 
 model ProofOfAddress {
-  id              String              @id @default(uuid())
-  address         String
-  state           String
-  localGovernment String
-  city            String
-  documentType    AddressProofDocType
-  image           String
-  isVerified      Boolean             @default(false)
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
+  id                String                @id @default(uuid())
+  address           String              
+  state             String              
+  localGovernment   String              
+  city              String              
+  documentType      AddressProofDocType     
+  image             String
+  isVerified        Boolean               @default(false)              
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
 
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userVerificationId      String              @unique
+  userVerification        UserVerification    @relation(fields: [userVerificationId], references: [id], onDelete: Cascade)
 }
 
 model NextOfKin {
-  id           String   @id @default(uuid())
-  firstName    String
-  lastName     String
-  gender       String
-  relationship String
-  phone        String
-  email        String
-  address      String
-  isVerified   Boolean  @default(false)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id              String          @id @default(uuid())
+  firstName       String        
+  lastName        String        
+  gender          String        
+  relationship    String        
+  phone           String        
+  email           String        
+  address         String
+  localGovernment String
+  city            String
+  state           String
+  isVerified      Boolean         @default(false)    
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  userVerificationId      String              @unique
+  userVerification        UserVerification    @relation(fields: [userVerificationId], references: [id], onDelete: Cascade)
 }
 
 model Transaction {
-  id              String   @id @default(uuid())
+  id              String        @id @default(uuid())
   amount          Float
-  transactionType String // "Credit" or "Debit"
-  status          String // "Success", "Pending", or "Failed"
+  transactionType String        // "Credit" or "Debit"
+  status          String        // "Success", "Pending", or "Failed"
   accountName     String
   bankName        String
   bankAccount     String
-  narration       String // "Cash"
+  narration       String        // "Cash"
   sessionId       String
-  transactionId   String   @unique
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactionId   String        @unique
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  userAccountId          String               @unique
+  userAccount            UserAccount          @relation(fields: [userAccountId], references: [id], onDelete: Cascade)
 }
 
 model Card {
-  id             String   @id @default(uuid())
-  cardNumber     String
-  cardHolderName String
-  expiryDate     String
-  cvv            String
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id              String          @id @default(uuid())
+  cardNumber      String
+  cardHolderName  String
+  expiryDate      String
+  cvv             String
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
 
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userAccountId          String               @unique
+  userAccount            UserAccount          @relation(fields: [userAccountId], references: [id], onDelete: Cascade)
 }
 
 model Feedback {
-  id        String   @id @default(uuid())
-  name      String
-  email     String
-  message   String
-  createdAt DateTime @default(now())
+  id                  String          @id @default(uuid())
+  name                String
+  email               String          
+  message             String
+  createdAt           DateTime        @default(now())
+}
+
+model BvnResponse {
+  id                   String          @unique
+  firstname            String
+  middlename           String?
+  lastname             String
+  fullname             String
+  dob                  DateTime       
+  bvn                  String
+  gender               String       
+  customer             BvnCustomer?
+  verificationCountry  String
+  createdAt            DateTime        @default(now())
+  aliases              String[]
+  phone                String[]
+  email                String[]
+  address              String[]
+  nationality          String
+  lgaOfOrigin          String
+  lgaOfResidence       String
+  stateOfOrigin        String
+  stateOfResidence     String
+  maritalStatus        String
+  nextOfKins           String[]
+  nin                  String
+  photoId              BvnPhotoId[]       
+  enrollment           BvnEnrollment?
+}
+
+model BvnCustomer {
+  id         String       @unique
+  name       String
+  userId     String       @unique
+  user       BvnResponse  @relation(fields: [userId], references: [id])
+}
+
+model BvnPhotoId {
+  id         String       @unique
+  userId     String       @unique
+  url        String
+  imageType  String       
+  user       BvnResponse  @relation(fields: [userId], references: [id])
+}
+
+model BvnEnrollment {
+  id               String       @unique
+  userId           String       @unique
+  bank             String
+  branch           String
+  registrationDate DateTime     
+  user             BvnResponse  @relation(fields: [userId], references: [id])
 }
 
 enum  UserRoles {

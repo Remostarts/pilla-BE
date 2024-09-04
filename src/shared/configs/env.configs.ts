@@ -28,4 +28,9 @@ export const configs = {
     senderPass: process.env.MAIL_PASSWORD,
 
     node_env: process.env.NODE_ENV,
+
+    //* Bank Api
+    bankUrl: process.env.BANK_URL,
+    clientId: process.env.CLIENT_ID,
+    XAuthSignature: process.env.X_AUTH_SIGNATURE,
 };

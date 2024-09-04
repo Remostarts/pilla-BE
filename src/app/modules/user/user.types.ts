@@ -3,13 +3,14 @@ import { AddressProofDocType, IdVerificationDocType } from '@prisma/client';
 export type TBvnVerificationInput = {
     bvn: string;
     gender: string;
-    dateOfBirth: string;
+    dateOfBirth: Date;
 };
 
 export type TIdVerificationInput = {
     documentType: IdVerificationDocType;
     idNumber: string;
     image: string;
+    nin: string;
 };
 
 export type TProofOfAddressInput = {
@@ -29,6 +30,9 @@ export type TNextOfKinInput = {
     phone: string;
     email: string;
     address: string;
+    localGovernment: string;
+    state: string;
+    city: string;
 };
 
 export type TAddCardInput = {
@@ -40,4 +44,9 @@ export type TAddCardInput = {
 
 export type TAddMoneyInput = {
     amount: number;
+};
+
+export type TTransactionPinInput = {
+    pin: string;
+    confirmPin: string;
 };

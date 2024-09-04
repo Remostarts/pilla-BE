@@ -27,6 +27,10 @@ const options = {
                 description: 'Development server',
                 url: 'http://localhost:8080/api/v1',
             },
+            {
+                description: 'Production server',
+                url: 'https://pilla-be.vercel.app/api/v1',
+            },
         ],
         tags: [
             {

@@ -35,7 +35,7 @@ export class CredentialSharedServices {
     }
 
     static async findUserByToken(token: string) {
-       const user =await  prisma.user.findFirst({
+        const user = await prisma.user.findFirst({
             where: {
                 refreshToken: {
                     has: token,
@@ -43,8 +43,8 @@ export class CredentialSharedServices {
             },
         });
 
-        return user
-     }
+        return user;
+    }
     // static async findUserByToken(token: string): Promise<User | null> {
     //     return prisma.user.findFirst({
     //         where: {

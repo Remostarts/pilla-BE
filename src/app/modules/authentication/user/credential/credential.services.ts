@@ -1,19 +1,22 @@
 /* eslint-disable class-methods-use-this */
 import { GettingStartedUser, User } from '@prisma/client';
+// import axios from 'axios';
 import crypto from 'crypto';
 import httpStatus from 'http-status';
 import { JsonWebTokenError, JwtPayload } from 'jsonwebtoken';
+
 import {
     HandleApiError,
     configs,
     errorNames,
-    exclude,
+    // exclude,
     jwtHelpers,
     prisma,
 } from '../../../../../shared';
 import { MailOptions, sendMail } from '../../../../../shared/mail/mailService';
 import { CredentialSharedServices } from './credential.shared';
 import {
+    // TBankApiResponse,
     TEmailOtpSend,
     TForgetPasswordInput,
     TPartialUserRegisterInput,
@@ -27,11 +30,22 @@ const {
     findPartialUserByEmail,
     findUserByPhoneNumber,
     updateUserByEmail,
-    findUserByToken,
+    // findUserByToken,
     findUserById,
     updateUserById,
     findUserByEmailAndRole,
 } = CredentialSharedServices;
+
+// const getBankApiResponseMessage = (responseCode: string): string => {
+//     const errorMessages: Record<string, string> = {
+//         '00': 'Reserved Account Generated Successfully',
+//         '11': 'Error Completing Operation',
+//     };
+
+//     return (
+//         errorMessages[responseCode] || 'An unknown error occurred while creating the bank account.'
+//     );
+// };
 
 export class CredentialServices {
     createPartialUser = async (
@@ -102,7 +116,7 @@ export class CredentialServices {
         return createdPartialUser;
     };
 
-    createUser = async (user: TUserRegisterInput): Promise<Omit<User, 'password'> | null> => {
+    createUser = async (user: TUserRegisterInput): Promise<object | null> => {
         const userExists = await findUserByEmail(user.email);
         const partialUser = await findPartialUserByEmail(user.email);
         // user non existence check
@@ -141,17 +155,17 @@ export class CredentialServices {
         const { firstName, lastName, middleName, phone, email } = partialUser;
         const { password, role } = user;
 
-        const createdUser = await prisma.user.create({
-            data: {
-                email,
-                password,
-                firstName,
-                middleName,
-                lastName,
-                role,
-                phone,
-            },
-        });
+        // const createdUser = await prisma.user.create({
+        //     data: {
+        //         email,
+        //         password,
+        //         firstName,
+        //         middleName,
+        //         lastName,
+        //         role,
+        //         phone,
+        //     },
+        // });
 
         const deleteGettingStartedUser = await prisma.gettingStartedUser.delete({
             where: {
@@ -167,7 +181,68 @@ export class CredentialServices {
             );
         }
 
-        return exclude(createdUser, ['password']);
+        let createdUser = {} as User;
+        // let bankApiResponse = {} as unknown;
+
+        await prisma.$transaction(async (tx) => {
+            createdUser = await tx.user.create({
+                data: {
+                    email,
+                    password,
+                    firstName,
+                    middleName,
+                    lastName,
+                    role,
+                    phone,
+                },
+            });
+
+            // const bankApiUrl = `${configs.bankUrl}/PiPCreateReservedAccountNumber`;
+            // const bankApiHeaders = {
+            //     'Client-Id': configs.clientId,
+            //     'X-Auth-Signature': configs.XAuthSignature,
+            // };
+            // const bankApiBody = {
+            //     account_name: createdUser?.firstName,
+            //     bvn: '',
+            // };
+
+            // bankApiResponse = await axios.post(bankApiUrl, bankApiBody, {
+            //     headers: bankApiHeaders,
+            // });
+            // // console.log('bankApiResponse', bankApiResponse);
+            // const { responseCode, account_number, account_name } =
+            //     bankApiResponse?.data as TBankApiResponse;
+            // // const responseCode = '00';
+
+            // if (responseCode !== '00') {
+            //     // Handle bank API error by throwing a meaningful message
+            //     const errorMessage = getBankApiResponseMessage(responseCode);
+            //     throw new HandleApiError(
+            //         `EXTERNAL API ERROR`,
+            //         httpStatus.BAD_REQUEST,
+            //         errorMessage
+            //     );
+            // }
+
+            // Log or handle the bank API success response
+            // console.log('Bank API response:', bankApiResponse?.data);
+            const res = {
+                account_number: '123456',
+                account_name: 'lemul',
+                bvn: '5558484',
+            };
+
+            await tx.userAccount.create({
+                data: {
+                    accountNumber: res.account_number,
+                    accountName: res.account_name,
+                    userId: createdUser?.id,
+                },
+            });
+        });
+
+        return createdUser;
     };
 
     loginUser = async (loginInput: TUserLoginInput): Promise<TUserLoginResponse | null> => {
@@ -203,6 +278,7 @@ export class CredentialServices {
         //         'Your account has not been verified'
         //     );
         // }
+
         const { email, role, firstName, id, profileImage } = userExists;
         const payloadData = {
             email,
@@ -210,7 +286,6 @@ export class CredentialServices {
             firstName,
             id,
             profileImage,
-
             iat: Math.floor(Date.now() / 1000),
         };
         const refreshTokenPayloadData = {
@@ -375,9 +450,8 @@ export class CredentialServices {
     async refreshAccessToken(
         refreshToken: string
     ): Promise<Omit<TUserLoginResponse, 'userExists'> | void> {
-       
         // console.log('🌼 🔥🔥 CredentialServices 🔥🔥 userExists🌼', userExists);
-        const decodedData= jwtHelpers.verifyToken(
+        const decodedData = jwtHelpers.verifyToken(
             refreshToken,
             configs.jwtSecretRefresh as string
         );
@@ -387,7 +461,7 @@ export class CredentialServices {
         // refresh token reuse detection
         if (!userExists) {
             // refresh token niye asce but db te nai
-         
+
             if (decodedData) {
                 const hackedUser = await findUserById(decodedData.id as string);
                 if (hackedUser) {

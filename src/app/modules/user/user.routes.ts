@@ -22,60 +22,75 @@ const {
     getTransactionById,
     addCard,
     addMoneyUsingCard,
+    getVerificationStatus,
+    setTransactionPin,
 } = userModules.userControllers;
 
 router.post(
     '/verify-bvn',
     zodValidator(bnvVerificationInputZodSchema),
-    roleVerifier('user'),
+    roleVerifier('personal', 'business'),
     asyncHandler(bvnVerification.bind(userModules))
 );
 
 router.post(
     '/verify-id',
     zodValidator(idVerificationInputZodSchema),
-    roleVerifier('user'),
+    roleVerifier('personal', 'business'),
     asyncHandler(idVerification.bind(userModules))
 );
 
 router.post(
     '/verify-address',
     zodValidator(proofOfAddressInputZodSchema),
-    roleVerifier('user'),
+    roleVerifier('personal', 'business'),
     asyncHandler(proofOfAddress.bind(userModules))
 );
 
 router.post(
     '/add-next-of-kin',
     zodValidator(nextOfKinInputZodSchema),
-    roleVerifier('user'),
+    roleVerifier('personal', 'business'),
     asyncHandler(nextOfKin.bind(userModules))
+);
+
+router.post(
+    '/setTransactionPin',
+    // zodValidator(nextOfKinInputZodSchema),
+    roleVerifier('personal', 'business'),
+    asyncHandler(setTransactionPin.bind(userModules))
 );
 
 router.get(
     '/transactions',
-    roleVerifier('user'),
+    roleVerifier('personal', 'business'),
     asyncHandler(getAllTransactions.bind(userModules))
 );
 
 router.get(
     '/transactions/:id',
-    roleVerifier('user'),
+    roleVerifier('personal', 'business'),
     asyncHandler(getTransactionById.bind(userModules))
 );
 
 router.post(
     '/add-card',
     zodValidator(addCardInputZodSchema),
-    roleVerifier('user'),
+    roleVerifier('personal', 'business'),
     asyncHandler(addCard.bind(userModules))
 );
 
 router.post(
     '/add-money/:cardId',
     zodValidator(addMoneyInputZodSchema),
-    roleVerifier('user'),
+    roleVerifier('personal', 'business'),
     asyncHandler(addMoneyUsingCard.bind(userModules))
+);
+
+router.get(
+    '/getVerificationStatus',
+    roleVerifier('personal', 'business'),
+    asyncHandler(getVerificationStatus.bind(userModules))
 );
 
 export const userRoutes = router;

@@ -8,6 +8,7 @@ import {
     Transaction,
     UserVerification,
 } from '@prisma/client';
+// import axios from 'axios';
 import { randomUUID } from 'crypto';
 import httpStatus from 'http-status';
 import { errorNames, HandleApiError, prisma } from '../../../shared';
@@ -19,7 +20,6 @@ import {
     TProofOfAddressInput,
     TTransactionPinInput,
 } from './user.types';
-// import axios from 'axios';
 
 export class UserServices {
     async bvnVerification(
@@ -658,7 +658,7 @@ export class UserServices {
         const transaction = await prisma.transaction.findUnique({
             where: {
                 id: transactionId,
-             },
+            },
         });
 
         if (!transaction) {
@@ -754,7 +754,7 @@ export class UserServices {
         return transaction;
     }
 
-    async getVerificationStatus(userId: string): Promise<object> {
+    async getPersonalDashboardData(userId: string): Promise<object> {
         const userVer = await prisma.userVerification.findUnique({
             where: {
                 userId,
@@ -794,25 +794,12 @@ export class UserServices {
             },
         });
 
-        // const bvnVer = await prisma.bankVerification.findUnique({
-        //     where: {
-        //         userVerificationId: userVer?.id,
-        //     },
-        // });
-        // const idVer = await prisma.identityVerification.findUnique({
-        //     where: {
-        //         userVerificationId: userVer?.id,
-        //     },
-        // });
-        // const addVer = await prisma.proofOfAddress.findUnique({
-        //     where: {
-        //         userVerificationId: userVer?.id,
-        //     },
-        // });
-        // const kinVer = await prisma.nextOfKin.findUnique({
-        //     where: {
-        //         userVerificationId: userVer?.id,
-        //     },
+        // const bvnApiUrl = 'http://154.113.16.142:8882/postingrest/GetProvidusAccount' as string;
+
+        // const response = await axios.post(bvnApiUrl, {
+        //     accountNumber: userAcc?.accountNumber,
+        //     userName: 'test',
+        //     password: 'test',
         // });
 
         return {
@@ -822,6 +809,9 @@ export class UserServices {
             proofOfAddress: userVer?.proofOfAddress?.isVerified || false,
             nextOfKin: userVer?.nextOfKin?.isVerified || false,
             transactionPin: !!userAcc?.transactionPin,
+            availableBalance: 45000.57,
+            rentFinance: 18000.32,
+            pillaSavings: 70000.95,
         };
     }
 

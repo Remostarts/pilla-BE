@@ -23,7 +23,7 @@ const {
     getTransactionById,
     addCard,
     addMoneyUsingCard,
-    getVerificationStatus,
+    getPersonalDashboardData,
     setTransactionPin,
 } = userModules.userControllers;
 
@@ -89,9 +89,9 @@ router.post(
 );
 
 router.get(
-    '/getVerificationStatus',
-    roleVerifier('personal', 'business'),
-    asyncHandler(getVerificationStatus.bind(userModules))
+    '/getPersonalDashboardData',
+    roleVerifier('personal'),
+    asyncHandler(getPersonalDashboardData.bind(userModules))
 );
 
 export const userRoutes = router;

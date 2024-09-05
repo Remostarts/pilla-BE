@@ -48,8 +48,8 @@ model UserVerification {
 
 model UserAccount {
   id                String            @id @default(uuid())
-  accountName       String            @unique
-  accountNumber     String            @unique
+  accountName       String            
+  accountNumber     String            
   amount            Float             @default(0)    
   transactions      Transaction[] 
   cards             Card[]  

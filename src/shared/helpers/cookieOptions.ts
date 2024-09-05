@@ -3,6 +3,6 @@ const cookieOptions = {
     sameSite: 'none' as const,
     // secure: configs.env === 'production',
     httpOnly: true,
-  };
-  
-  export { cookieOptions };
+};
+
+export { cookieOptions };

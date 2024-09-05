@@ -77,16 +77,16 @@ export class UserControllers {
         });
     }
 
-    async getVerificationStatus(req: Request, res: Response): Promise<void> {
+    async getPersonalDashboardData(req: Request, res: Response): Promise<void> {
         const userId = req.user?.id as string;
 
-        const getStatus = await this.userServices.getVerificationStatus(userId);
+        const result = await this.userServices.getPersonalDashboardData(userId);
 
         responseHandler<object>(res, {
             statusCode: httpStatus.OK,
             success: true,
-            message: 'Status retrieved successfully',
-            data: getStatus,
+            message: 'Dashboard data retrieved successfully',
+            data: result,
         });
     }
 

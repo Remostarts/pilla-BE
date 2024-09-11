@@ -11,10 +11,40 @@ import {
     TNextOfKinInput,
     TProofOfAddressInput,
     TTransactionPinInput,
+    TUpdateUserProfileInput,
 } from './user.types';
 
 export class UserControllers {
     constructor(readonly userServices: UserServices) {}
+
+    async updateUserProfile(req: Request, res: Response): Promise<void> {
+        const userId = req.user?.id as string;
+
+        const result = await this.userServices.updateUserProfile(
+            userId,
+            req.body as TUpdateUserProfileInput
+        );
+
+        responseHandler<object>(res, {
+            statusCode: httpStatus.OK,
+            success: true,
+            message: 'User information updated successfully',
+            data: result,
+        });
+    }
+
+    async getUserProfile(req: Request, res: Response): Promise<void> {
+        const userId = req.user?.id as string;
+
+        const result = await this.userServices.getUserProfile(userId);
+
+        responseHandler<object>(res, {
+            statusCode: httpStatus.OK,
+            success: true,
+            message: 'User information retrieved successfully',
+            data: result,
+        });
+    }
 
     async bvnVerification(req: Request, res: Response): Promise<void> {
         const userId = req.user?.id as string;
@@ -121,10 +151,9 @@ export class UserControllers {
     }
 
     async getTransactionById(req: Request, res: Response): Promise<void> {
-        const userId = req.user?.id as string;
         const { id } = req.params;
 
-        const transaction = await this.userServices.getTransactionById(id, userId);
+        const transaction = await this.userServices.getTransactionById(id);
 
         responseHandler<object>(res, {
             statusCode: httpStatus.OK,

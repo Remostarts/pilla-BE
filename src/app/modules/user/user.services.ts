@@ -14,14 +14,102 @@ import httpStatus from 'http-status';
 import { errorNames, HandleApiError, prisma } from '../../../shared';
 import {
     TAddCardInput,
+    TAddMoneyInput,
     TBvnVerificationInput,
     TIdVerificationInput,
     TNextOfKinInput,
     TProofOfAddressInput,
     TTransactionPinInput,
+    TUpdateUserProfileInput,
 } from './user.types';
 
 export class UserServices {
+    async updateUserProfile(userId: string, input: TUpdateUserProfileInput): Promise<object> {
+        const {
+            firstName,
+            middleName,
+            lastName,
+            email,
+            phone,
+            address,
+            city,
+            localGovernment,
+            state,
+        } = input;
+
+        if (firstName || middleName || lastName || email || phone) {
+            await prisma.user.update({
+                where: { id: userId },
+                data: {
+                    ...(firstName && { firstName }),
+                    ...(middleName && { middleName }),
+                    ...(lastName && { lastName }),
+                    ...(email && { email }),
+                    ...(phone && { phone }),
+                },
+            });
+        }
+
+        const profile = await prisma.profile.findUnique({
+            where: { userId },
+        });
+
+        const profileData = {
+            ...(address && { address }),
+            ...(city && { city }),
+            ...(localGovernment && { localGovernment }),
+            ...(state && { state }),
+        };
+
+        if (Object.keys(profileData).length > 0) {
+            if (profile) {
+                await prisma.profile.update({
+                    where: { userId },
+                    data: profileData,
+                });
+            } else {
+                await prisma.profile.create({
+                    data: {
+                        ...profileData,
+                        user: {
+                            connect: { id: userId },
+                        },
+                    },
+                });
+            }
+        }
+
+        return {};
+    }
+
+    async getUserProfile(userId: string): Promise<object> {
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: {
+                id: true,
+                firstName: true,
+                middleName: true,
+                lastName: true,
+                email: true,
+                phone: true,
+                profile: {
+                    select: {
+                        address: true,
+                        city: true,
+                        localGovernment: true,
+                        state: true,
+                    },
+                },
+            },
+        });
+
+        if (!user) {
+            throw new HandleApiError(errorNames.NOT_FOUND, httpStatus.NOT_FOUND, 'User not found!');
+        }
+
+        return user;
+    }
+
     async bvnVerification(
         input: TBvnVerificationInput,
         userId: string
@@ -60,7 +148,6 @@ export class UserServices {
                     userId,
                 },
             });
-            // console.log('Here', user);
         }
 
         if (!user) {
@@ -638,10 +725,15 @@ export class UserServices {
         return kinDetails;
     }
 
-    async getAllTransactions(userId: string): Promise<Transaction[]> {
-        const transactions = await prisma.transaction.findMany({
+    async getAllTransactions(userId: string): Promise<Transaction[] | null> {
+        const userAcc = await prisma.userAccount.findUnique({
             where: { userId },
+            select: {
+                transactions: true,
+            },
         });
+
+        const transactions = userAcc?.transactions as Transaction[];
 
         if (!transactions) {
             throw new HandleApiError(
@@ -654,10 +746,10 @@ export class UserServices {
         return transactions;
     }
 
-    async getTransactionById(transactionId: string, userId: string): Promise<Transaction | null> {
+    async getTransactionById(id: string): Promise<Transaction | null> {
         const transaction = await prisma.transaction.findUnique({
             where: {
-                id: transactionId,
+                id,
             },
         });
 
@@ -679,8 +771,20 @@ export class UserServices {
             where: { id: userId },
         });
 
+        const userAcc = await prisma.userAccount.findUnique({
+            where: { userId },
+        });
+
         if (!user) {
             throw new HandleApiError(errorNames.NOT_FOUND, httpStatus.NOT_FOUND, 'User not found');
+        }
+
+        if (!userAcc) {
+            throw new HandleApiError(
+                errorNames.NOT_FOUND,
+                httpStatus.NOT_FOUND,
+                'User Account not found'
+            );
         }
 
         // logic to validate card details
@@ -691,7 +795,11 @@ export class UserServices {
                 expiryDate,
                 cardHolderName,
                 cvv,
-                userId,
+                userAccount: {
+                    connect: {
+                        id: userAcc.id,
+                    },
+                },
             },
         });
 
@@ -705,10 +813,9 @@ export class UserServices {
     ): Promise<Transaction> {
         const { amount } = input;
 
-        const card = await prisma.card.findFirst({
+        const card = await prisma.card.findUnique({
             where: {
                 id: cardId,
-                userId,
             },
         });
 
@@ -720,15 +827,15 @@ export class UserServices {
 
         // If the payment is successful, create a transaction record
 
-        const user = await prisma.user.findUnique({
-            where: { id: userId },
+        const userAcc = await prisma.userAccount.findUnique({
+            where: { userId },
         });
 
-        const presentAmount = user?.amount;
+        const presentAmount = userAcc?.amount;
         const newAmt = (presentAmount as number) + amount;
 
-        const addAmt = await prisma.user.update({
-            where: { id: userId },
+        const addAmt = await prisma.userAccount.update({
+            where: { id: userAcc?.id },
             data: {
                 amount: newAmt,
             },
@@ -739,15 +846,19 @@ export class UserServices {
         const transaction = await prisma.transaction.create({
             data: {
                 amount,
-                userId,
                 transactionType: 'Credit',
                 status: 'Success',
                 accountName: 'ABC',
                 bankName: 'ABC',
                 bankAccount: '1234',
                 narration: 'Card',
-                sessionId: '5552684102526652', // generate session id id
-                transactionId: '541241284546681222', // generate transaction id
+                sessionId: randomUUID(),
+                transactionId: randomUUID(),
+                userAccount: {
+                    connect: {
+                        id: userAcc?.id,
+                    },
+                },
             },
         });
 

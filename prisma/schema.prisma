@@ -62,15 +62,18 @@ model UserAccount {
 }
 
 model Profile {
-  id            String        @id @default(uuid())
-  road          String?     
-  house         String?     
-  city          String?     
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  id              String        @id @default(uuid())
+  road            String?     
+  house           String?
+  address         String?     
+  city            String?
+  state           String?
+  localGovernment String?     
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
-  userId        String        @unique
-  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String        @unique
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model GettingStartedUser {

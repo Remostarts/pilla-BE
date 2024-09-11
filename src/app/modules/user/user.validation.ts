@@ -154,3 +154,17 @@ export const pinInputZodSchema = z.object({
             .length(4, { message: 'Confirm PIN must be exactly 4 characters long.' }),
     }),
 });
+
+export const updateUserInputZodSchema = z.object({
+    body: z.object({
+        firstName: z.string().trim().optional(),
+        middleName: z.string().trim().optional(),
+        lastName: z.string().trim().optional(),
+        email: z.string().trim().email().optional(),
+        phone: z.string().trim().optional(),
+        address: z.string().trim().optional(),
+        city: z.string().trim().optional(),
+        localGovernment: z.string().trim().optional(),
+        state: z.string().trim().optional(),
+    }),
+});

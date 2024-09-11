@@ -10,6 +10,7 @@ import {
     nextOfKinInputZodSchema,
     pinInputZodSchema,
     proofOfAddressInputZodSchema,
+    updateUserInputZodSchema,
 } from './user.validation';
 
 const router = Router();
@@ -25,7 +26,22 @@ const {
     addMoneyUsingCard,
     getPersonalDashboardData,
     setTransactionPin,
+    updateUserProfile,
+    getUserProfile,
 } = userModules.userControllers;
+
+router.patch(
+    '/update-user-profile',
+    zodValidator(updateUserInputZodSchema),
+    roleVerifier('personal', 'business'), // Add role verification middleware as needed
+    asyncHandler(updateUserProfile.bind(userModules))
+);
+
+router.get(
+    '/get-user-profile',
+    roleVerifier('personal', 'business'), // Add role verification middleware as needed
+    asyncHandler(getUserProfile.bind(userModules))
+);
 
 router.post(
     '/verify-bvn',

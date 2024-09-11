@@ -24,6 +24,18 @@ export type TForgetPasswordInput = {
     confirmNewPassword: string;
 };
 
+export type TResetPasswordInput = {
+    currentPassword: string;
+    newPassword: string;
+    confirmNewPassword: string;
+};
+
+export type TResetTransactionPinInput = {
+    currentTransactionPin: string;
+    newTransactionPin: string;
+    confirmNewTransactionPin: string;
+};
+
 export type TEmailOtpSend = {
     email: string;
 };
@@ -64,4 +76,8 @@ export type TBankApiResponse = {
     requestSuccessful: boolean;
     responseMessage: string;
     responseCode: string;
+};
+
+export type TCreateAccountApiResponse = {
+    data: TBankApiResponse;
 };

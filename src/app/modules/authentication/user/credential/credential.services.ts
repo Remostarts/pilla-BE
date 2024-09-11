@@ -16,10 +16,13 @@ import {
 import { MailOptions, sendMail } from '../../../../../shared/mail/mailService';
 import { CredentialSharedServices } from './credential.shared';
 import {
+    TCreateAccountApiResponse,
     // TBankApiResponse,
     TEmailOtpSend,
     TForgetPasswordInput,
     TPartialUserRegisterInput,
+    TResetPasswordInput,
+    TResetTransactionPinInput,
     TUserLoginInput,
     TUserLoginResponse,
     TUserRegisterInput,
@@ -36,16 +39,16 @@ const {
     findUserByEmailAndRole,
 } = CredentialSharedServices;
 
-// const getBankApiResponseMessage = (responseCode: string): string => {
-//     const errorMessages: Record<string, string> = {
-//         '00': 'Reserved Account Generated Successfully',
-//         '11': 'Error Completing Operation',
-//     };
+const getBankApiResponseMessage = (responseCode: string): string => {
+    const errorMessages: Record<string, string> = {
+        '00': 'Reserved Account Generated Successfully',
+        '11': 'Error Completing Operation',
+    };
 
-//     return (
-//         errorMessages[responseCode] || 'An unknown error occurred while creating the bank account.'
-//     );
-// };
+    return (
+        errorMessages[responseCode] || 'An unknown error occurred while creating the bank account.'
+    );
+};
 
 export class CredentialServices {
     createPartialUser = async (
@@ -136,7 +139,7 @@ export class CredentialServices {
             );
         }
 
-        if (partialUser?.emailVerificationExpiresAt < new Date()) {
+        if ((partialUser?.emailVerificationExpiresAt as Date) < new Date()) {
             throw new HandleApiError(
                 errorNames.UNAUTHORIZED,
                 httpStatus.UNAUTHORIZED,
@@ -155,18 +158,6 @@ export class CredentialServices {
         const { firstName, lastName, middleName, phone, email } = partialUser;
         const { password, role } = user;
 
-        // const createdUser = await prisma.user.create({
-        //     data: {
-        //         email,
-        //         password,
-        //         firstName,
-        //         middleName,
-        //         lastName,
-        //         role,
-        //         phone,
-        //     },
-        // });
-
         const deleteGettingStartedUser = await prisma.gettingStartedUser.delete({
             where: {
                 email: user.email,
@@ -182,7 +173,7 @@ export class CredentialServices {
         }
 
         let createdUser = {} as User;
-        let bankApiResponse = {} as unknown;
+        let bankApiResponse = {} as TCreateAccountApiResponse;
 
         await prisma.$transaction(async (tx) => {
             createdUser = await tx.user.create({
@@ -210,33 +201,22 @@ export class CredentialServices {
             bankApiResponse = await axios.post(bankApiUrl, bankApiBody, {
                 headers: bankApiHeaders,
             });
-            // console.log('bankApiResponse', bankApiResponse);
-            const { responseCode, account_number, account_name } =
-                bankApiResponse?.data as TBankApiResponse;
-            // const responseCode = '00';
+            console.log('bankApiResponse', bankApiResponse);
+            const { responseCode } = bankApiResponse.data;
 
             if (responseCode !== '00') {
-                // Handle bank API error by throwing a meaningful message
                 const errorMessage = getBankApiResponseMessage(responseCode);
                 throw new HandleApiError(
-                    `EXTERNAL API ERROR`,
+                    errorNames.BAD_REQUEST,
                     httpStatus.BAD_REQUEST,
                     errorMessage
                 );
             }
 
-            // Log or handle the bank API success response
-            // console.log('Bank API response:', bankApiResponse?.data);
-            // const res = {
-            //     account_number: '123456',
-            //     account_name: firstName,
-            //     bvn: '5558484',
-            // };
-
             await tx.userAccount.create({
                 data: {
-                    accountNumber: account_number,
-                    accountName: account_name,
+                    accountNumber: bankApiResponse?.data.account_number,
+                    accountName: bankApiResponse?.data.account_name,
                     userId: createdUser?.id,
                 },
             });
@@ -416,36 +396,105 @@ export class CredentialServices {
         return updatedUser;
     };
 
-    // resetPassword = async (
-    //     input: TForgetPasswordInput,
-    //     userID: string
-    // ): Promise<Omit<User, 'password'> | null> => {
-    //     const { confirmNewPassword, newPassword } = input;
+    resetPassword = async (input: TResetPasswordInput, userID: string): Promise<object> => {
+        const { currentPassword, confirmNewPassword, newPassword } = input;
 
-    //     if (newPassword !== confirmNewPassword) {
-    //         throw new HandleApiError(
-    //             errorNames.CONFLICT,
-    //             httpStatus.CONFLICT,
-    //             'new passowrd and confirm password must be same'
-    //         );
-    //     }
+        if (newPassword !== confirmNewPassword) {
+            throw new HandleApiError(
+                errorNames.CONFLICT,
+                httpStatus.CONFLICT,
+                'new passowrd and confirm password must be same'
+            );
+        }
 
-    //     const user = await prisma.user.findUnique({
-    //         where: { id: userID },
-    //     });
+        const user = await prisma.user.findUnique({
+            where: { id: userID },
+        });
 
-    //     if (!user) {
-    //         throw new HandleApiError(
-    //             errorNames.NOT_FOUND,
-    //             httpStatus.NOT_FOUND,
-    //             'user not found !'
-    //         );
-    //     }
+        const isPassCorrect = await prisma.user.validatePassword(
+            user?.password as string,
+            currentPassword
+        );
 
-    //     const updatedUser = await updateUserById(userID, { password: newPassword });
+        if (!isPassCorrect) {
+            throw new HandleApiError(
+                errorNames.UNAUTHORIZED,
+                httpStatus.UNAUTHORIZED,
+                'Old password is incorrect!'
+            );
+        }
 
-    //     return updatedUser;
-    // };
+        if (!user) {
+            throw new HandleApiError(
+                errorNames.NOT_FOUND,
+                httpStatus.NOT_FOUND,
+                'user not found !'
+            );
+        }
+
+        const updatedUser = await updateUserById(userID, { password: newPassword });
+
+        if (!updatedUser) {
+            throw new HandleApiError(
+                errorNames.CONFLICT,
+                httpStatus.CONFLICT,
+                'failed to update password!'
+            );
+        }
+
+        return {};
+    };
+
+    resetTransactionPin = async (
+        input: TResetTransactionPinInput,
+        userID: string
+    ): Promise<object> => {
+        const { currentTransactionPin, newTransactionPin, confirmNewTransactionPin } = input;
+
+        if (newTransactionPin !== confirmNewTransactionPin) {
+            throw new HandleApiError(
+                errorNames.CONFLICT,
+                httpStatus.CONFLICT,
+                'new Transaction pin and confirm Transaction pin must be same'
+            );
+        }
+
+        const userAcc = await prisma.userAccount.findUnique({
+            where: { userId: userID },
+        });
+
+        if (!userAcc) {
+            throw new HandleApiError(
+                errorNames.NOT_FOUND,
+                httpStatus.NOT_FOUND,
+                'user account not found !'
+            );
+        }
+
+        if (userAcc.transactionPin !== currentTransactionPin) {
+            throw new HandleApiError(
+                errorNames.NOT_FOUND,
+                httpStatus.NOT_FOUND,
+                'Invalid current transaction pin!'
+            );
+        }
+
+        // const updatedUser = await updateUserById(userID, { password: newPassword });
+        const updatedUser = await prisma.userAccount.update({
+            where: { userId: userID },
+            data: { transactionPin: newTransactionPin },
+        });
+
+        if (!updatedUser) {
+            throw new HandleApiError(
+                errorNames.CONFLICT,
+                httpStatus.CONFLICT,
+                'failed to update transaction pin!'
+            );
+        }
+
+        return {};
+    };
 
     async refreshAccessToken(
         refreshToken: string

@@ -183,3 +183,71 @@ export const forgetPasswordOtpSendZodSchema = z.object({
             .trim(),
     }),
 });
+
+export const resetPasswordZodSchema = z.object({
+    body: z
+        .object({
+            currentPassword: z.string({
+                required_error: 'current password is required',
+            }),
+
+            newPassword: z
+                .string({
+                    required_error: 'Password is required',
+                })
+                .min(6, 'Password too short - should be 6 chars minimum')
+                .max(100, 'Password too long - should be 100 chars maximum')
+                .trim()
+                .regex(
+                    passwordRegex,
+                    'Invalid password format. It must contain at least one lowercase letter, one uppercase letter, one digit, and one special character'
+                ),
+
+            confirmNewPassword: z.string({
+                required_error: 'Confirm password is required',
+            }),
+        })
+        .refine(
+            (data) =>
+                data.newPassword &&
+                data.confirmNewPassword &&
+                data.newPassword === data.confirmNewPassword,
+
+            {
+                message: 'Passwords do not match.',
+                path: ['newPassword', 'confirmNewPassword'],
+            }
+        ),
+});
+
+export const resetTransactionPinZodSchema = z.object({
+    body: z
+        .object({
+            currentTransactionPin: z
+                .string({
+                    required_error: 'current Transaction Pin is required',
+                })
+                .trim(),
+
+            newTransactionPin: z
+                .string({
+                    required_error: 'Transaction Pin is required',
+                })
+                .length(4, { message: 'PIN must be exactly 4 characters long.' }),
+
+            confirmNewTransactionPin: z.string({
+                required_error: 'Confirm Transaction Pin is required',
+            }),
+        })
+        .refine(
+            (data) =>
+                data.newTransactionPin &&
+                data.confirmNewTransactionPin &&
+                data.newTransactionPin === data.confirmNewTransactionPin,
+
+            {
+                message: 'Transaction Pin do not match.',
+                path: ['newTransactionPin', 'confirmNewTransactionPin'],
+            }
+        ),
+});

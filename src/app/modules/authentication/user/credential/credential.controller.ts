@@ -9,6 +9,8 @@ import {
     TEmailOtpSend,
     TForgetPasswordInput,
     TPartialUserRegisterInput,
+    TResetPasswordInput,
+    TResetTransactionPinInput,
     TUserLoginInput,
     TUserLoginResponse,
     TUserRegisterInput,
@@ -124,6 +126,38 @@ export class CredentialControllers {
             success: true,
             message: 'token refreshed successfully!',
             data: result as Omit<TUserLoginResponse, 'userExists'>,
+        });
+    }
+
+    async resetPassword(req: Request, res: Response): Promise<void> {
+        const userId = req.user?.id as string;
+
+        const result = await this.credentialServices.resetPassword(
+            req.body as TResetPasswordInput,
+            userId
+        );
+
+        responseHandler<object>(res, {
+            statusCode: httpStatus.OK,
+            success: true,
+            message: 'password reset successfully!',
+            data: result,
+        });
+    }
+
+    async resetTransactionPin(req: Request, res: Response): Promise<void> {
+        const userId = req.user?.id as string;
+
+        const result = await this.credentialServices.resetTransactionPin(
+            req.body as TResetTransactionPinInput,
+            userId
+        );
+
+        responseHandler<object>(res, {
+            statusCode: httpStatus.OK,
+            success: true,
+            message: 'Transaction pin reset successfully!',
+            data: result,
         });
     }
 

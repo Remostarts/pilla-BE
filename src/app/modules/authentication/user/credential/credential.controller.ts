@@ -129,10 +129,10 @@ export class CredentialControllers {
         });
     }
 
-    async resetPassword(req: Request, res: Response): Promise<void> {
+    async changePassword(req: Request, res: Response): Promise<void> {
         const userId = req.user?.id as string;
 
-        const result = await this.credentialServices.resetPassword(
+        const result = await this.credentialServices.changePassword(
             req.body as TResetPasswordInput,
             userId
         );
@@ -145,10 +145,10 @@ export class CredentialControllers {
         });
     }
 
-    async resetTransactionPin(req: Request, res: Response): Promise<void> {
+    async changeTransactionPin(req: Request, res: Response): Promise<void> {
         const userId = req.user?.id as string;
 
-        const result = await this.credentialServices.resetTransactionPin(
+        const result = await this.credentialServices.changeTransactionPin(
             req.body as TResetTransactionPinInput,
             userId
         );

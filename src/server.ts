@@ -6,6 +6,8 @@ import app from './app';
 import { configs } from './shared/configs';
 import { errorLogger, logger } from './shared/utils/logger';
 
+import { initSocket } from './shared/socket/socket.config';
+
 // Handle uncaughtException
 process.on('uncaughtException', (error) => {
     console.log('uncaughtException detected.😞 '.red);
@@ -14,6 +16,7 @@ process.on('uncaughtException', (error) => {
 });
 
 const server = http.createServer(app);
+initSocket(server);
 
 const startServer = () => {
     try {

@@ -123,11 +123,7 @@ export class UserControllers {
     async setTransactionPin(req: Request, res: Response): Promise<void> {
         const userId = req.user?.id as string;
 
-        const result = await this.userServices.setTransactionPin(
-            req.body as TTransactionPinInput,
-            userId
-        );
-        console.log(result);
+        await this.userServices.setTransactionPin(req.body as TTransactionPinInput, userId);
 
         responseHandler<object>(res, {
             statusCode: httpStatus.OK,
@@ -173,6 +169,32 @@ export class UserControllers {
             success: true,
             message: 'Card added successfully',
             data: result,
+        });
+    }
+
+    async removeCard(req: Request, res: Response): Promise<void> {
+        const { id } = req.params;
+
+        await this.userServices.removeCard(id);
+
+        responseHandler<object>(res, {
+            statusCode: httpStatus.OK,
+            success: true,
+            message: 'Card removed successfully',
+            data: {},
+        });
+    }
+
+    async getAllCards(req: Request, res: Response): Promise<void> {
+        const userId = req.user?.id as string;
+
+        const cards = await this.userServices.getAllCards(userId);
+
+        responseHandler<object>(res, {
+            statusCode: httpStatus.OK,
+            success: true,
+            message: 'All cards retrieved successfully',
+            data: cards,
         });
     }
 

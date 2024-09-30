@@ -396,7 +396,7 @@ export class CredentialServices {
         return updatedUser;
     };
 
-    resetPassword = async (input: TResetPasswordInput, userID: string): Promise<object> => {
+    changePassword = async (input: TResetPasswordInput, userID: string): Promise<object> => {
         const { currentPassword, confirmNewPassword, newPassword } = input;
 
         if (newPassword !== confirmNewPassword) {
@@ -445,7 +445,7 @@ export class CredentialServices {
         return {};
     };
 
-    resetTransactionPin = async (
+    changeTransactionPin = async (
         input: TResetTransactionPinInput,
         userID: string
     ): Promise<object> => {

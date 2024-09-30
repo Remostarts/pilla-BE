@@ -21,8 +21,8 @@ const {
     forgetPassword,
     forgetPasswordOtpSend,
     refreshAccessToken,
-    resetPassword,
-    resetTransactionPin,
+    changePassword,
+    changeTransactionPin,
 } = credentialModules.credentialControllers;
 
 router.post(
@@ -56,16 +56,16 @@ router.post(
     asyncHandler(refreshAccessToken.bind(credentialModules))
 );
 router.post(
-    '/reset-password',
+    '/change-password',
     zodValidator(resetPasswordZodSchema),
     roleVerifier('personal', 'business'),
-    asyncHandler(resetPassword.bind(credentialModules))
+    asyncHandler(changePassword.bind(credentialModules))
 );
 router.post(
-    '/reset-transaction-pin',
+    '/change-transaction-pin',
     zodValidator(resetTransactionPinZodSchema),
     roleVerifier('personal', 'business'),
-    asyncHandler(resetTransactionPin.bind(credentialModules))
+    asyncHandler(changeTransactionPin.bind(credentialModules))
 );
 // router.post(
 //     '/verify-email',

@@ -28,6 +28,8 @@ const {
     setTransactionPin,
     updateUserProfile,
     getUserProfile,
+    removeCard,
+    getAllCards,
 } = userModules.userControllers;
 
 router.patch(
@@ -95,6 +97,18 @@ router.post(
     zodValidator(addCardInputZodSchema),
     roleVerifier('personal', 'business'),
     asyncHandler(addCard.bind(userModules))
+);
+
+router.post(
+    '/remove-card/:id',
+    roleVerifier('personal', 'business'),
+    asyncHandler(removeCard.bind(userModules))
+);
+
+router.get(
+    '/getAllCards',
+    roleVerifier('personal', 'business'),
+    asyncHandler(getAllCards.bind(userModules))
 );
 
 router.post(

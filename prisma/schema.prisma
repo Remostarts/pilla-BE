@@ -31,6 +31,7 @@ model User {
   refreshToken               String[]
   userVerification           UserVerification?
   userAccount                UserAccount?
+  notifications              Notification[]
 }
 
 model UserVerification {
@@ -166,7 +167,7 @@ model Transaction {
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
   
-  userAccountId          String               @unique
+  userAccountId          String               
   userAccount            UserAccount          @relation(fields: [userAccountId], references: [id], onDelete: Cascade)
 }
 
@@ -179,7 +180,7 @@ model Card {
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 
-  userAccountId          String               @unique
+  userAccountId          String               
   userAccount            UserAccount          @relation(fields: [userAccountId], references: [id], onDelete: Cascade)
 }
 
@@ -241,6 +242,22 @@ model BvnEnrollment {
   branch           String
   registrationDate DateTime     
   user             BvnResponse  @relation(fields: [userId], references: [id])
+}
+
+model Notification {
+  id             String        @id @default(uuid())
+  message        String
+  email          String
+  read           Boolean       @default(false)
+  createdAt      DateTime      @default(now())
+}
+
+model Chat {
+  id              String       @id @default(uuid())
+  senderEmail     String
+  receiverEmail   String
+  message         String
+  createdAt       DateTime @default(now())
 }
 
 enum  UserRoles {

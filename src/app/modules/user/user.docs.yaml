@@ -8,6 +8,8 @@ paths:
         post:
             summary: Verify BVN (Bank Verification Number)
             tags: [User]
+            security:
+                - customAuth: []
             requestBody:
                 required: true
                 content:
@@ -32,6 +34,8 @@ paths:
         post:
             summary: Verify Identity
             tags: [User]
+            security:
+                - customAuth: []
             requestBody:
                 required: true
                 content:
@@ -56,6 +60,8 @@ paths:
         post:
             summary: Verify Address
             tags: [User]
+            security:
+                - customAuth: []
             requestBody:
                 required: true
                 content:
@@ -80,6 +86,8 @@ paths:
         post:
             summary: Add Next of Kin
             tags: [User]
+            security:
+                - customAuth: []
             requestBody:
                 required: true
                 content:
@@ -100,32 +108,12 @@ paths:
                 '500':
                     description: Internal server error
 
-    /user/add-card:
-        post:
-            summary: Add a new card for the user
-            tags: [User]
-            requestBody:
-                required: true
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/AddCardInput'
-            responses:
-                '201':
-                    description: Card added successfully
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/Card'
-                '404':
-                    description: User not found
-                '500':
-                    description: Internal server error
-
     /user/add-money/{cardId}:
         post:
             summary: Add money using a stored card
             tags: [User]
+            security:
+                - customAuth: []
             parameters:
                 - in: path
                   name: cardId
@@ -150,53 +138,137 @@ paths:
                     description: Card or User not found
                 '500':
                     description: Internal server error
+
     /user/get-verification-status:
         get:
             summary: Retrieve user verification status
             tags: [User]
             security:
-                - bearerAuth: []
+                - customAuth: []
             responses:
                 '200':
-                description: Status retrieved successfully
-                content:
-                    application/json:
-                    schema:
-                        $ref: '#/components/schemas/VerificationStatusResponse'
+                    description: Status retrieved successfully
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/VerificationStatusResponse'
                 '404':
-                description: User not found
+                    description: User not found
                 '500':
-                description: Internal server error
+                    description: Internal server error
 
     /user/set-transaction-pin:
-    post:
-      summary: Set transaction PIN for user
-      tags: [User]
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SetTransactionPinInput'
-      responses:
-        '200':
-          description: PIN set successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: Pin set successfully
-        '404':
-          description: User not found
-        '409':
-          description: Conflict - PIN and Confirm PIN must be the same
-        '500':
-          description: Internal server error
+        post:
+            summary: Set transaction PIN for user
+            tags: [User]
+            security:
+              - customAuth: []
+            requestBody:
+              required: true
+              content:
+                application/json:
+                  schema:
+                    $ref: '#/components/schemas/SetTransactionPinInput'
+            responses:
+              '200':
+                description: PIN set successfully
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      properties:
+                        message:
+                          type: string
+                          example: Pin set successfully
+              '404':
+                description: User not found
+              '409':
+                description: Conflict - PIN and Confirm PIN must be the same
+              '500':
+                description: Internal server error
+
+    /user/add-card:
+        post:
+            tags: [User]
+            summary: Add Card
+            security:
+                - customAuth: []
+            description: Adds a new card to the user's account.
+            requestBody:
+              description: Card details to be added
+              required: true
+              content:
+                application/json:
+                  schema:
+                    $ref: '#/components/schemas/AddCardRequest'
+            responses:
+              '201':
+                description: Card added successfully
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/CardResponse'
+              '400':
+                $ref: '#/components/responses/BadRequest'
+              '401':
+                $ref: '#/components/responses/Unauthorized'
+              '404':
+                $ref: '#/components/responses/NotFound'
+              '409':
+                $ref: '#/components/responses/Conflict'
+              '500':
+                $ref: '#/components/responses/InternalServerError'
+
+    /user/remove-card/{id}:
+        post:
+            tags: [User]
+            summary: Remove Card
+            security:
+              - customAuth: []
+            description: Removes an existing card from the user's account.
+            parameters:
+              - name: id
+                in: path
+                required: true
+                description: ID of the card to remove
+                schema:
+                  type: string
+            responses:
+              '200':
+                description: Card removed successfully
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/RemoveCardResponse'
+              '400':
+                $ref: '#/components/responses/BadRequest'
+              '401':
+                $ref: '#/components/responses/Unauthorized'
+              '404':
+                $ref: '#/components/responses/NotFound'
+              '500':
+                $ref: '#/components/responses/InternalServerError'
+
+    /user/getAllCards:
+        get:
+            tags: [User]
+            security:
+              - customAuth: []
+            summary: Get All Cards
+            description: Retrieves all cards associated with the user's account.
+            responses:
+              '200':
+                description: All cards retrieved successfully
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/GetAllCardsResponse'
+              '401':
+                $ref: '#/components/responses/Unauthorized'
+              '404':
+                $ref: '#/components/responses/NotFound'
+              '500':
+                $ref: '#/components/responses/InternalServerError'
 
 components:
     VerificationStatusResponse:
@@ -533,3 +605,49 @@ components:
                 transactionId:
                     type: string
                     example: '541241284541'
+        AddCardRequest:
+            type: object
+            properties:
+              cardNumber:
+                type: string
+              expiryDate:
+                type: string
+              cardHolderName:
+                type: string
+              cvv:
+                type: string
+            required:
+              - cardNumber
+              - expiryDate
+              - cardHolderName
+              - cvv
+
+        CardResponse:
+          type: object
+          properties:
+            id:
+              type: string
+            cardNumber:
+              type: string
+            expiryDate:
+              type: string
+            cardHolderName:
+              type: string
+            userAccountId:
+              type: string
+    
+        RemoveCardResponse:
+          type: object
+          properties:
+            success:
+              type: boolean
+            message:
+              type: string
+    
+        GetAllCardsResponse:
+          type: object
+          properties:
+            cards:
+              type: array
+              items:
+                $ref: '#/components/schemas/CardResponse'

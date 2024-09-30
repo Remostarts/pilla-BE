@@ -8,6 +8,10 @@ components:
             type: apiKey
             in: cookie
             name: refreshToken
+        customAuth:
+            type: apiKey
+            in: header
+            name: Authorization
     schemas:
         timestamps:
             properties:

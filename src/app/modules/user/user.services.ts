@@ -806,6 +806,47 @@ export class UserServices {
         return card;
     }
 
+    async removeCard(id: string): Promise<object> {
+        const card = await prisma.card.findUnique({
+            where: {
+                id,
+            },
+        });
+
+        if (!card) {
+            throw new HandleApiError(errorNames.NOT_FOUND, httpStatus.NOT_FOUND, 'card not found');
+        }
+
+        await prisma.card.delete({
+            where: {
+                id,
+            },
+        });
+
+        return {};
+    }
+
+    async getAllCards(userId: string): Promise<Card[] | null> {
+        const userAcc = await prisma.userAccount.findUnique({
+            where: { userId },
+            select: {
+                cards: true,
+            },
+        });
+
+        const cards = userAcc?.cards as Card[];
+
+        if (!cards) {
+            throw new HandleApiError(
+                errorNames.NOT_FOUND,
+                httpStatus.NOT_FOUND,
+                'No cards found for this user'
+            );
+        }
+
+        return cards;
+    }
+
     async addMoneyUsingCard(
         userId: string,
         cardId: string,

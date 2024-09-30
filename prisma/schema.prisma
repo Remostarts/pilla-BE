@@ -1,6 +1,9 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,36 +13,19 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Define the User model
-model User {
-  id           String   @id @default(uuid())
-  email        String   @unique
-  role         String   @default("user")
-  password     String?
-  firstName    String
-  lastName     String
-  profileImage String?
-  isVerified   Boolean  @default(false)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  profile      Profile?
-  refreshToken String[]
-
-  @@map("users")
+model Notification {
+  id        Int      @id @default(autoincrement())
+  email     String
+  message   String
+  type      String
+  createdAt DateTime @default(now())
 }
 
-// Define the Profile model
-model Profile {
-  id          String   @id @default(uuid())
-  road        String?
-  house       String?
-  city        String?
-  phoneNumber String? @unique
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  userId      String   @unique
-  // Define the relation to the User model
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("profiles")
+model Chat {
+  id            Int      @id @default(autoincrement())
+  senderEmail   String
+  receiverEmail String
+  message       String
+  createdAt     DateTime @default(now())
 }
+

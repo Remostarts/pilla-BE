@@ -6,7 +6,7 @@ export class CredentialSharedServices {
     static async findUserByEmail(email: string): Promise<TUserWithProfile | null> {
         return prisma.user.findUnique({
             where: { email },
-            include: { profile: true },
+            include: { profile: true, notifications: true },
         });
     }
 

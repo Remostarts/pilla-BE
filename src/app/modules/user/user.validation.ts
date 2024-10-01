@@ -1,4 +1,4 @@
-import { AddressProofDocType, IdVerificationDocType } from '@prisma/client';
+import { AddressProofDocType } from '@prisma/client';
 import { z } from 'zod';
 
 export const bnvVerificationInputZodSchema = z.object({
@@ -20,13 +20,7 @@ export const bnvVerificationInputZodSchema = z.object({
 export const idVerificationInputZodSchema = z.object({
     body: z
         .object({
-            documentType: z
-                .enum([
-                    IdVerificationDocType.voter_id,
-                    IdVerificationDocType.driver_license,
-                    IdVerificationDocType.international_passport,
-                ])
-                .optional(),
+            documentType: z.string().optional(),
 
             idNumber: z.string().optional(),
 
@@ -149,5 +143,28 @@ export const addMoneyInputZodSchema = z.object({
                 required_error: 'amount is required',
             })
             .min(1),
+    }),
+});
+
+export const pinInputZodSchema = z.object({
+    body: z.object({
+        pin: z.string().length(4, { message: 'PIN must be exactly 4 characters long.' }),
+        confirmPin: z
+            .string()
+            .length(4, { message: 'Confirm PIN must be exactly 4 characters long.' }),
+    }),
+});
+
+export const updateUserInputZodSchema = z.object({
+    body: z.object({
+        firstName: z.string().trim().optional(),
+        middleName: z.string().trim().optional(),
+        lastName: z.string().trim().optional(),
+        email: z.string().trim().email().optional(),
+        phone: z.string().trim().optional(),
+        address: z.string().trim().optional(),
+        city: z.string().trim().optional(),
+        localGovernment: z.string().trim().optional(),
+        state: z.string().trim().optional(),
     }),
 });

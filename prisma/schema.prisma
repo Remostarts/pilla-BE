@@ -31,6 +31,7 @@ model User {
   refreshToken               String[]
   userVerification           UserVerification?
   userAccount                UserAccount?
+  notifications              Notification[]
 }
 
 model UserVerification {
@@ -48,8 +49,8 @@ model UserVerification {
 
 model UserAccount {
   id                String            @id @default(uuid())
-  accountName       String            @unique
-  accountNumber     String            @unique
+  accountName       String            
+  accountNumber     String            
   amount            Float             @default(0)    
   transactions      Transaction[] 
   cards             Card[]  
@@ -62,15 +63,18 @@ model UserAccount {
 }
 
 model Profile {
-  id            String        @id @default(uuid())
-  road          String?     
-  house         String?     
-  city          String?     
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  id              String        @id @default(uuid())
+  road            String?     
+  house           String?
+  address         String?     
+  city            String?
+  state           String?
+  localGovernment String?     
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
-  userId        String        @unique
-  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String        @unique
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model GettingStartedUser {
@@ -163,7 +167,7 @@ model Transaction {
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
   
-  userAccountId          String               @unique
+  userAccountId          String               
   userAccount            UserAccount          @relation(fields: [userAccountId], references: [id], onDelete: Cascade)
 }
 
@@ -176,7 +180,7 @@ model Card {
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 
-  userAccountId          String               @unique
+  userAccountId          String               
   userAccount            UserAccount          @relation(fields: [userAccountId], references: [id], onDelete: Cascade)
 }
 
@@ -238,6 +242,22 @@ model BvnEnrollment {
   branch           String
   registrationDate DateTime     
   user             BvnResponse  @relation(fields: [userId], references: [id])
+}
+
+model Notification {
+  id             String        @id @default(uuid())
+  message        String
+  email          String
+  read           Boolean       @default(false)
+  createdAt      DateTime      @default(now())
+}
+
+model Chat {
+  id              String       @id @default(uuid())
+  senderEmail     String
+  receiverEmail   String
+  message         String
+  createdAt       DateTime @default(now())
 }
 
 enum  UserRoles {

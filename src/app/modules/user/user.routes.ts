@@ -8,7 +8,9 @@ import {
     bnvVerificationInputZodSchema,
     idVerificationInputZodSchema,
     nextOfKinInputZodSchema,
+    pinInputZodSchema,
     proofOfAddressInputZodSchema,
+    updateUserInputZodSchema,
 } from './user.validation';
 
 const router = Router();
@@ -22,9 +24,26 @@ const {
     getTransactionById,
     addCard,
     addMoneyUsingCard,
-    getVerificationStatus,
+    getPersonalDashboardData,
     setTransactionPin,
+    updateUserProfile,
+    getUserProfile,
+    removeCard,
+    getAllCards,
 } = userModules.userControllers;
+
+router.patch(
+    '/update-user-profile',
+    zodValidator(updateUserInputZodSchema),
+    roleVerifier('personal', 'business'), // Add role verification middleware as needed
+    asyncHandler(updateUserProfile.bind(userModules))
+);
+
+router.get(
+    '/get-user-profile',
+    roleVerifier('personal', 'business'), // Add role verification middleware as needed
+    asyncHandler(getUserProfile.bind(userModules))
+);
 
 router.post(
     '/verify-bvn',
@@ -56,7 +75,7 @@ router.post(
 
 router.post(
     '/setTransactionPin',
-    // zodValidator(nextOfKinInputZodSchema),
+    zodValidator(pinInputZodSchema),
     roleVerifier('personal', 'business'),
     asyncHandler(setTransactionPin.bind(userModules))
 );
@@ -81,6 +100,18 @@ router.post(
 );
 
 router.post(
+    '/remove-card/:id',
+    roleVerifier('personal', 'business'),
+    asyncHandler(removeCard.bind(userModules))
+);
+
+router.get(
+    '/getAllCards',
+    roleVerifier('personal', 'business'),
+    asyncHandler(getAllCards.bind(userModules))
+);
+
+router.post(
     '/add-money/:cardId',
     zodValidator(addMoneyInputZodSchema),
     roleVerifier('personal', 'business'),
@@ -88,9 +119,9 @@ router.post(
 );
 
 router.get(
-    '/getVerificationStatus',
-    roleVerifier('personal', 'business'),
-    asyncHandler(getVerificationStatus.bind(userModules))
+    '/getPersonalDashboardData',
+    roleVerifier('personal'),
+    asyncHandler(getPersonalDashboardData.bind(userModules))
 );
 
 export const userRoutes = router;

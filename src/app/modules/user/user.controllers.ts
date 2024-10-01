@@ -10,10 +10,41 @@ import {
     TIdVerificationInput,
     TNextOfKinInput,
     TProofOfAddressInput,
+    TTransactionPinInput,
+    TUpdateUserProfileInput,
 } from './user.types';
 
 export class UserControllers {
     constructor(readonly userServices: UserServices) {}
+
+    async updateUserProfile(req: Request, res: Response): Promise<void> {
+        const userId = req.user?.id as string;
+
+        const result = await this.userServices.updateUserProfile(
+            userId,
+            req.body as TUpdateUserProfileInput
+        );
+
+        responseHandler<object>(res, {
+            statusCode: httpStatus.OK,
+            success: true,
+            message: 'User information updated successfully',
+            data: result,
+        });
+    }
+
+    async getUserProfile(req: Request, res: Response): Promise<void> {
+        const userId = req.user?.id as string;
+
+        const result = await this.userServices.getUserProfile(userId);
+
+        responseHandler<object>(res, {
+            statusCode: httpStatus.OK,
+            success: true,
+            message: 'User information retrieved successfully',
+            data: result,
+        });
+    }
 
     async bvnVerification(req: Request, res: Response): Promise<void> {
         const userId = req.user?.id as string;
@@ -76,23 +107,23 @@ export class UserControllers {
         });
     }
 
-    async getVerificationStatus(req: Request, res: Response): Promise<void> {
+    async getPersonalDashboardData(req: Request, res: Response): Promise<void> {
         const userId = req.user?.id as string;
 
-        const getStatus = await this.userServices.getVerificationStatus(userId);
+        const result = await this.userServices.getPersonalDashboardData(userId);
 
         responseHandler<object>(res, {
             statusCode: httpStatus.OK,
             success: true,
-            message: 'Status retrieved successfully',
-            data: getStatus,
+            message: 'Dashboard data retrieved successfully',
+            data: result,
         });
     }
 
     async setTransactionPin(req: Request, res: Response): Promise<void> {
         const userId = req.user?.id as string;
 
-        const result = await this.userServices.setTransactionPin(userId);
+        await this.userServices.setTransactionPin(req.body as TTransactionPinInput, userId);
 
         responseHandler<object>(res, {
             statusCode: httpStatus.OK,
@@ -116,10 +147,9 @@ export class UserControllers {
     }
 
     async getTransactionById(req: Request, res: Response): Promise<void> {
-        const userId = req.user?.id as string;
         const { id } = req.params;
 
-        const transaction = await this.userServices.getTransactionById(id, userId);
+        const transaction = await this.userServices.getTransactionById(id);
 
         responseHandler<object>(res, {
             statusCode: httpStatus.OK,
@@ -139,6 +169,32 @@ export class UserControllers {
             success: true,
             message: 'Card added successfully',
             data: result,
+        });
+    }
+
+    async removeCard(req: Request, res: Response): Promise<void> {
+        const { id } = req.params;
+
+        await this.userServices.removeCard(id);
+
+        responseHandler<object>(res, {
+            statusCode: httpStatus.OK,
+            success: true,
+            message: 'Card removed successfully',
+            data: {},
+        });
+    }
+
+    async getAllCards(req: Request, res: Response): Promise<void> {
+        const userId = req.user?.id as string;
+
+        const cards = await this.userServices.getAllCards(userId);
+
+        responseHandler<object>(res, {
+            statusCode: httpStatus.OK,
+            success: true,
+            message: 'All cards retrieved successfully',
+            data: cards,
         });
     }
 

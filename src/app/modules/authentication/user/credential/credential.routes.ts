@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { asyncHandler, zodValidator } from '../../../../../shared';
+import { asyncHandler, roleVerifier, zodValidator } from '../../../../../shared';
 import { CredentialModules } from './credential.modules';
 import {
     forgetPasswordOtpSendZodSchema,
@@ -8,6 +8,8 @@ import {
     loginZodSchema,
     refreshTokenZodSchema,
     registerZodSchema,
+    resetPasswordZodSchema,
+    resetTransactionPinZodSchema,
 } from './credential.validation';
 
 const router = Router();
@@ -19,6 +21,8 @@ const {
     forgetPassword,
     forgetPasswordOtpSend,
     refreshAccessToken,
+    changePassword,
+    changeTransactionPin,
 } = credentialModules.credentialControllers;
 
 router.post(
@@ -50,6 +54,18 @@ router.post(
     '/refresh-token',
     zodValidator(refreshTokenZodSchema),
     asyncHandler(refreshAccessToken.bind(credentialModules))
+);
+router.post(
+    '/change-password',
+    zodValidator(resetPasswordZodSchema),
+    roleVerifier('personal', 'business'),
+    asyncHandler(changePassword.bind(credentialModules))
+);
+router.post(
+    '/change-transaction-pin',
+    zodValidator(resetTransactionPinZodSchema),
+    roleVerifier('personal', 'business'),
+    asyncHandler(changeTransactionPin.bind(credentialModules))
 );
 // router.post(
 //     '/verify-email',

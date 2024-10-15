@@ -50,3 +50,15 @@ export type TTransactionPinInput = {
     pin: string;
     confirmPin: string;
 };
+
+export type TUpdateUserProfileInput = {
+    firstName?: string;
+    middleName?: string;
+    lastName?: string;
+    email?: string;
+    phone?: string;
+    address?: string;
+    city?: string;
+    localGovernment?: string;
+    state?: string;
+};

@@ -8,6 +8,7 @@ import {
     Transaction,
     UserVerification,
 } from '@prisma/client';
+// import axios from 'axios';
 import { randomUUID } from 'crypto';
 import httpStatus from 'http-status';
 import { errorNames, HandleApiError, prisma } from '../../../shared';
@@ -19,10 +20,96 @@ import {
     TNextOfKinInput,
     TProofOfAddressInput,
     TTransactionPinInput,
+    TUpdateUserProfileInput,
 } from './user.types';
-// import axios from 'axios';
 
 export class UserServices {
+    async updateUserProfile(userId: string, input: TUpdateUserProfileInput): Promise<object> {
+        const {
+            firstName,
+            middleName,
+            lastName,
+            email,
+            phone,
+            address,
+            city,
+            localGovernment,
+            state,
+        } = input;
+
+        if (firstName || middleName || lastName || email || phone) {
+            await prisma.user.update({
+                where: { id: userId },
+                data: {
+                    ...(firstName && { firstName }),
+                    ...(middleName && { middleName }),
+                    ...(lastName && { lastName }),
+                    ...(email && { email }),
+                    ...(phone && { phone }),
+                },
+            });
+        }
+
+        const profile = await prisma.profile.findUnique({
+            where: { userId },
+        });
+
+        const profileData = {
+            ...(address && { address }),
+            ...(city && { city }),
+            ...(localGovernment && { localGovernment }),
+            ...(state && { state }),
+        };
+
+        if (Object.keys(profileData).length > 0) {
+            if (profile) {
+                await prisma.profile.update({
+                    where: { userId },
+                    data: profileData,
+                });
+            } else {
+                await prisma.profile.create({
+                    data: {
+                        ...profileData,
+                        user: {
+                            connect: { id: userId },
+                        },
+                    },
+                });
+            }
+        }
+
+        return {};
+    }
+
+    async getUserProfile(userId: string): Promise<object> {
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: {
+                id: true,
+                firstName: true,
+                middleName: true,
+                lastName: true,
+                email: true,
+                phone: true,
+                profile: {
+                    select: {
+                        address: true,
+                        city: true,
+                        localGovernment: true,
+                        state: true,
+                    },
+                },
+            },
+        });
+
+        if (!user) {
+            throw new HandleApiError(errorNames.NOT_FOUND, httpStatus.NOT_FOUND, 'User not found!');
+        }
+
+        return user;
+    }
+
     async bvnVerification(
         input: TBvnVerificationInput,
         userId: string
@@ -61,7 +148,6 @@ export class UserServices {
                     userId,
                 },
             });
-            // console.log('Here', user);
         }
 
         if (!user) {
@@ -123,7 +209,7 @@ export class UserServices {
             lastname: 'Tobi',
             fullname: 'Fusuyi Micheal Tobi',
             dob: '1989-04-16',
-            bvn: '22165416979',
+            bvn: randomUUID(),
             gender: 'Male',
             customer: {
                 _id: randomUUID(),
@@ -142,7 +228,7 @@ export class UserServices {
             state_of_residence: 'Lagos State',
             marital_status: 'Single',
             next_of_kins: [],
-            nin: '97340343221',
+            nin: randomUUID(),
             photo_id: [
                 {
                     url: 'https://djrzfsrexmrry.cloudfront.net/MjIxNj.png',
@@ -187,15 +273,15 @@ export class UserServices {
                 nextOfKins: fetchedData.next_of_kins,
                 nin: fetchedData.nin,
                 photoId: {
-                    create: fetchedData.photo_id.map((photo: any) => ({
+                    create: fetchedData.photo_id.map((photo) => ({
                         id: fetchedData.id,
                         url: photo.url,
-                        imageType: photo.image_type,
+                        imageType: photo?.image_type,
                     })),
                 },
                 enrollment: {
                     create: {
-                        id: fetchedData.id,
+                        id: randomUUID(),
                         bank: fetchedData.enrollment.bank,
                         branch: fetchedData.enrollment.branch,
                         registrationDate: new Date(fetchedData.enrollment.registration_date),
@@ -210,7 +296,11 @@ export class UserServices {
                 gender,
                 dateOfBirth,
                 isVerified: true,
-                userVerificationId: userVerify?.id || user.userVerification?.id,
+                userVerification: {
+                    connect: {
+                        id: userVerify?.id || user.userVerification?.id,
+                    },
+                },
             },
         });
 
@@ -286,7 +376,11 @@ export class UserServices {
                 data: {
                     nin,
                     isVerified: true,
-                    userVerificationId: userVerify?.id || user.userVerification?.id,
+                    userVerification: {
+                        connect: {
+                            id: userVerify?.id || user.userVerification?.id,
+                        },
+                    },
                 },
             });
         } else {
@@ -428,7 +522,11 @@ export class UserServices {
                     image,
                     documentType,
                     isVerified: true,
-                    userVerificationId: userVerify?.id || user.userVerification?.id,
+                    userVerification: {
+                        connect: {
+                            id: userVerify?.id || user.userVerification?.id,
+                        },
+                    },
                 },
             });
         }
@@ -509,7 +607,11 @@ export class UserServices {
                 documentType,
                 image,
                 isVerified: true,
-                userVerificationId: userVerify?.id || user.userVerification?.id,
+                userVerification: {
+                    connect: {
+                        id: userVerify?.id || user.userVerification?.id,
+                    },
+                },
             },
         });
 
@@ -599,7 +701,11 @@ export class UserServices {
                 city,
                 state,
                 isVerified: true,
-                userVerificationId: userVerify?.id || user.userVerification?.id,
+                userVerification: {
+                    connect: {
+                        id: userVerify?.id || user.userVerification?.id,
+                    },
+                },
             },
         });
 
@@ -619,10 +725,15 @@ export class UserServices {
         return kinDetails;
     }
 
-    async getAllTransactions(userId: string): Promise<Transaction[]> {
-        const transactions = await prisma.transaction.findMany({
+    async getAllTransactions(userId: string): Promise<Transaction[] | null> {
+        const userAcc = await prisma.userAccount.findUnique({
             where: { userId },
+            select: {
+                transactions: true,
+            },
         });
+
+        const transactions = userAcc?.transactions as Transaction[];
 
         if (!transactions) {
             throw new HandleApiError(
@@ -635,9 +746,11 @@ export class UserServices {
         return transactions;
     }
 
-    async getTransactionById(transactionId: string, userId: string): Promise<Transaction | null> {
-        const transaction = await prisma.transaction.findFirst({
-            where: { id: transactionId, userId },
+    async getTransactionById(id: string): Promise<Transaction | null> {
+        const transaction = await prisma.transaction.findUnique({
+            where: {
+                id,
+            },
         });
 
         if (!transaction) {
@@ -658,8 +771,20 @@ export class UserServices {
             where: { id: userId },
         });
 
+        const userAcc = await prisma.userAccount.findUnique({
+            where: { userId },
+        });
+
         if (!user) {
             throw new HandleApiError(errorNames.NOT_FOUND, httpStatus.NOT_FOUND, 'User not found');
+        }
+
+        if (!userAcc) {
+            throw new HandleApiError(
+                errorNames.NOT_FOUND,
+                httpStatus.NOT_FOUND,
+                'User Account not found'
+            );
         }
 
         // logic to validate card details
@@ -670,11 +795,56 @@ export class UserServices {
                 expiryDate,
                 cardHolderName,
                 cvv,
-                userId,
+                userAccount: {
+                    connect: {
+                        id: userAcc.id,
+                    },
+                },
             },
         });
 
         return card;
+    }
+
+    async removeCard(id: string): Promise<object> {
+        const card = await prisma.card.findUnique({
+            where: {
+                id,
+            },
+        });
+
+        if (!card) {
+            throw new HandleApiError(errorNames.NOT_FOUND, httpStatus.NOT_FOUND, 'card not found');
+        }
+
+        await prisma.card.delete({
+            where: {
+                id,
+            },
+        });
+
+        return {};
+    }
+
+    async getAllCards(userId: string): Promise<Card[] | null> {
+        const userAcc = await prisma.userAccount.findUnique({
+            where: { userId },
+            select: {
+                cards: true,
+            },
+        });
+
+        const cards = userAcc?.cards as Card[];
+
+        if (!cards) {
+            throw new HandleApiError(
+                errorNames.NOT_FOUND,
+                httpStatus.NOT_FOUND,
+                'No cards found for this user'
+            );
+        }
+
+        return cards;
     }
 
     async addMoneyUsingCard(
@@ -684,10 +854,9 @@ export class UserServices {
     ): Promise<Transaction> {
         const { amount } = input;
 
-        const card = await prisma.card.findFirst({
+        const card = await prisma.card.findUnique({
             where: {
                 id: cardId,
-                userId,
             },
         });
 
@@ -699,15 +868,15 @@ export class UserServices {
 
         // If the payment is successful, create a transaction record
 
-        const user = await prisma.user.findUnique({
-            where: { id: userId },
+        const userAcc = await prisma.userAccount.findUnique({
+            where: { userId },
         });
 
-        const presentAmount = user?.amount;
+        const presentAmount = userAcc?.amount;
         const newAmt = (presentAmount as number) + amount;
 
-        const addAmt = await prisma.user.update({
-            where: { id: userId },
+        const addAmt = await prisma.userAccount.update({
+            where: { id: userAcc?.id },
             data: {
                 amount: newAmt,
             },
@@ -718,22 +887,26 @@ export class UserServices {
         const transaction = await prisma.transaction.create({
             data: {
                 amount,
-                userId,
                 transactionType: 'Credit',
                 status: 'Success',
                 accountName: 'ABC',
                 bankName: 'ABC',
                 bankAccount: '1234',
                 narration: 'Card',
-                sessionId: '5552684102526652', // generate session id id
-                transactionId: '541241284546681222', // generate transaction id
+                sessionId: randomUUID(),
+                transactionId: randomUUID(),
+                userAccount: {
+                    connect: {
+                        id: userAcc?.id,
+                    },
+                },
             },
         });
 
         return transaction;
     }
 
-    async getVerificationStatus(userId: string): Promise<object> {
+    async getPersonalDashboardData(userId: string): Promise<object> {
         const userVer = await prisma.userVerification.findUnique({
             where: {
                 userId,
@@ -773,25 +946,12 @@ export class UserServices {
             },
         });
 
-        // const bvnVer = await prisma.bankVerification.findUnique({
-        //     where: {
-        //         userVerificationId: userVer?.id,
-        //     },
-        // });
-        // const idVer = await prisma.identityVerification.findUnique({
-        //     where: {
-        //         userVerificationId: userVer?.id,
-        //     },
-        // });
-        // const addVer = await prisma.proofOfAddress.findUnique({
-        //     where: {
-        //         userVerificationId: userVer?.id,
-        //     },
-        // });
-        // const kinVer = await prisma.nextOfKin.findUnique({
-        //     where: {
-        //         userVerificationId: userVer?.id,
-        //     },
+        // const bvnApiUrl = 'http://154.113.16.142:8882/postingrest/GetProvidusAccount' as string;
+
+        // const response = await axios.post(bvnApiUrl, {
+        //     accountNumber: userAcc?.accountNumber,
+        //     userName: 'test',
+        //     password: 'test',
         // });
 
         return {
@@ -801,6 +961,9 @@ export class UserServices {
             proofOfAddress: userVer?.proofOfAddress?.isVerified || false,
             nextOfKin: userVer?.nextOfKin?.isVerified || false,
             transactionPin: !!userAcc?.transactionPin,
+            availableBalance: 45000.57,
+            rentFinance: 18000.32,
+            pillaSavings: 70000.95,
         };
     }
 

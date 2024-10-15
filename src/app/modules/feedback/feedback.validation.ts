@@ -15,8 +15,10 @@ export const feedbackInputZodSchema = z.object({
             required_error: 'name is required',
         }),
 
-        message: z.string({
-            required_error: 'name is required',
-        }),
+        message: z
+            .string({
+                required_error: 'name is required',
+            })
+            .trim(),
     }),
 });

@@ -42,4 +42,12 @@ const prisma = new PrismaClient({
     },
 });
 
-export { prisma };
+const resetDatabase = async () => {
+    // Example of how you might clear data from all tables
+    await prisma.$executeRaw`TRUNCATE TABLE "GettingStartedUser" RESTART IDENTITY CASCADE;`;
+
+    // If you need to reset the database schema, you could also run migrations or other setup tasks here
+    // await prisma.$executeRaw`your-schema-reset-sql`;
+};
+
+export { prisma, resetDatabase };

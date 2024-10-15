@@ -1,13 +1,16 @@
 import { Request, Response } from 'express';
 import httpStatus from 'http-status';
 
-import { User } from '@prisma/client';
-import { HandleApiError, cookieOptions, errorNames, responseHandler } from '../../../../../shared';
+import { GettingStartedUser, User } from '@prisma/client';
+import { errorNames, HandleApiError, responseHandler } from '../../../../../shared';
 import { CredentialServices } from './credential.services';
 import { CredentialSharedServices } from './credential.shared';
 import {
-    TCookies,
-    TRefreshToken,
+    TEmailOtpSend,
+    TForgetPasswordInput,
+    TPartialUserRegisterInput,
+    TResetPasswordInput,
+    TResetTransactionPinInput,
     TUserLoginInput,
     TUserLoginResponse,
     TUserRegisterInput,
@@ -18,6 +21,19 @@ const { updateUserById } = CredentialSharedServices;
 export class CredentialControllers {
     constructor(readonly credentialServices: CredentialServices) {}
 
+    async createPartialUser(req: Request, res: Response): Promise<void> {
+        const result = await this.credentialServices.createPartialUser(
+            req.body as TPartialUserRegisterInput
+        );
+
+        responseHandler<GettingStartedUser>(res, {
+            statusCode: httpStatus.CREATED,
+            success: true,
+            message: 'partial user created successfully!',
+            data: result,
+        });
+    }
+
     async createUser(req: Request, res: Response): Promise<void> {
         const result = await this.credentialServices.createUser(req.body as TUserRegisterInput);
 
@@ -25,44 +41,77 @@ export class CredentialControllers {
             statusCode: httpStatus.CREATED,
             success: true,
             message: 'user created successfully!',
-            data: result,
+            data: result as Omit<User, 'password'>,
         });
     }
 
     async loginUser(req: Request, res: Response): Promise<void> {
-        const { cookies } = req as { cookies: TCookies };
         const result = await this.credentialServices.loginUser(req.body as TUserLoginInput);
         const { refreshToken, userExists, ...rest } = result as TUserLoginResponse;
 
         let newRefreshTokenArray = userExists.refreshToken as string[] | [];
-        if (cookies?.refreshToken) {
-            newRefreshTokenArray = newRefreshTokenArray.filter(
-                (rt) => rt !== cookies?.refreshToken
-            );
-            const foundToken = userExists.refreshToken?.find((rt) => rt === cookies?.refreshToken);
-            if (!foundToken) {
-                newRefreshTokenArray = [];
-                res.clearCookie('refreshToken', cookieOptions);
-            }
+
+        if (newRefreshTokenArray.length >= 3) {
+            newRefreshTokenArray = [refreshToken];
+        } else {
+            newRefreshTokenArray = [...newRefreshTokenArray, refreshToken];
         }
-        newRefreshTokenArray = [...newRefreshTokenArray, refreshToken];
+        // if cookie contain a rt thats exist in rt array in db, then remove only that rt from rt array
+        // if (existedRefreshToken ) {
+        //     newRefreshTokenArray = newRefreshTokenArray.filter(
+        //         (rt) => rt !== existedRefreshToken
+        //     );
+        //     // if cookie contain a rt thats not exist in rt array in db, then remove all rt from db
+        //     const foundToken = userExists.refreshToken?.find((rt) => rt === existedRefreshToken );
+        //     if (!foundToken) {
+        //         newRefreshTokenArray = [];
+        //         res.clearCookie('refreshToken', cookieOptions);
+        //     }
+        // }
+
+        // newRefreshTokenArray = [...newRefreshTokenArray, refreshToken];
 
         await updateUserById(userExists.id, {
             refreshToken: newRefreshTokenArray,
         });
 
-        res.cookie('refreshToken', refreshToken, cookieOptions);
+        // res.cookie('refreshToken', refreshToken);
+        // res.cookie('accessToken', rest.accessToken, cookieOptions);
 
-        responseHandler<Omit<Omit<TUserLoginResponse, 'userExists'>, 'refreshToken'>>(res, {
+        responseHandler<Omit<TUserLoginResponse, 'userExists'>>(res, {
             statusCode: httpStatus.OK,
             success: true,
             message: 'user logged in successfully!',
-            data: rest,
+            data: { ...rest, refreshToken },
+        });
+    }
+
+    async forgetPasswordOtpSend(req: Request, res: Response): Promise<void> {
+        const result = await this.credentialServices.otpSend(req.body as TEmailOtpSend);
+
+        responseHandler<object>(res, {
+            statusCode: httpStatus.OK,
+            success: true,
+            message: 'Otp sent successfully',
+            data: result,
+        });
+    }
+
+    async forgetPassword(req: Request, res: Response): Promise<void> {
+        const result = await this.credentialServices.forgetPassword(
+            req.body as TForgetPasswordInput
+        );
+
+        responseHandler<object>(res, {
+            statusCode: httpStatus.OK,
+            success: true,
+            message: 'password changed successfully!',
+            data: result,
         });
     }
 
     async refreshAccessToken(req: Request, res: Response): Promise<void> {
-        const { refreshToken } = req.cookies as TRefreshToken;
+        const refreshToken = req.headers.authorization;
         if (!refreshToken) {
             throw new HandleApiError(
                 errorNames.UNAUTHORIZED,
@@ -70,48 +119,77 @@ export class CredentialControllers {
                 'invalid token!'
             );
         }
-        res.clearCookie('refreshToken', cookieOptions);
-        const result = await this.credentialServices.refreshAccessToken(refreshToken);
-        const { refreshToken: newRefreshToken, ...rest } = result as TUserLoginResponse;
-        res.cookie('refreshToken', newRefreshToken, cookieOptions);
 
-        responseHandler<Omit<TUserLoginResponse, 'userExists' | 'refreshToken'>>(res, {
+        const result = await this.credentialServices.refreshAccessToken(refreshToken);
+        responseHandler<Omit<TUserLoginResponse, 'userExists'>>(res, {
             statusCode: httpStatus.OK,
             success: true,
             message: 'token refreshed successfully!',
-            data: rest,
+            data: result as Omit<TUserLoginResponse, 'userExists'>,
         });
     }
 
-    async logoutUser(req: Request, res: Response): Promise<void> {
-        const { refreshToken } = req.cookies as TRefreshToken;
-        if (!refreshToken) {
-            throw new HandleApiError(
-                errorNames.UNAUTHORIZED,
-                httpStatus.UNAUTHORIZED,
-                'invalid token!'
-            );
-        }
-        res.clearCookie('refreshToken', cookieOptions);
-        await this.credentialServices.logoutUser(refreshToken);
+    async changePassword(req: Request, res: Response): Promise<void> {
+        const userId = req.user?.id as string;
 
-        responseHandler<object>(res, {
-            statusCode: httpStatus.NO_CONTENT,
-            success: true,
-            message: 'user logged out successfully!',
-            data: {},
-        });
-    }
-
-    async verifyEmail(req: Request, res: Response): Promise<void> {
-        const { token } = req.body as { token: string };
-        await this.credentialServices.verifyEmail(token);
+        const result = await this.credentialServices.changePassword(
+            req.body as TResetPasswordInput,
+            userId
+        );
 
         responseHandler<object>(res, {
             statusCode: httpStatus.OK,
             success: true,
-            message: 'email verified successfully!',
-            data: {},
+            message: 'password reset successfully!',
+            data: result,
         });
     }
+
+    async changeTransactionPin(req: Request, res: Response): Promise<void> {
+        const userId = req.user?.id as string;
+
+        const result = await this.credentialServices.changeTransactionPin(
+            req.body as TResetTransactionPinInput,
+            userId
+        );
+
+        responseHandler<object>(res, {
+            statusCode: httpStatus.OK,
+            success: true,
+            message: 'Transaction pin reset successfully!',
+            data: result,
+        });
+    }
+
+    // async logoutUser(req: Request, res: Response): Promise<void> {
+    //     const { refreshToken } = req.cookies as TRefreshToken;
+    //     if (!refreshToken) {
+    //         throw new HandleApiError(
+    //             errorNames.UNAUTHORIZED,
+    //             httpStatus.UNAUTHORIZED,
+    //             'invalid token!'
+    //         );
+    //     }
+    //     res.clearCookie('refreshToken', cookieOptions);
+    //     await this.credentialServices.logoutUser(refreshToken);
+
+    //     responseHandler<object>(res, {
+    //         statusCode: httpStatus.NO_CONTENT,
+    //         success: true,
+    //         message: 'user logged out successfully!',
+    //         data: {},
+    //     });
+    // }
+
+    // async verifyEmail(req: Request, res: Response): Promise<void> {
+    //     const { token } = req.body as { token: string };
+    //     await this.credentialServices.verifyEmail(token);
+
+    //     responseHandler<object>(res, {
+    //         statusCode: httpStatus.OK,
+    //         success: true,
+    //         message: 'email verified successfully!',
+    //         data: {},
+    //     });
+    // }
 }

@@ -1,1 +1,1 @@
-export { AdminPermissions, UserRole } from './enum';
+export { AdminPermissions, UserRole, CustomerType } from './enum';

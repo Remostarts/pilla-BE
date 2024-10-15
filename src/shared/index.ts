@@ -8,7 +8,7 @@ export { cookieOptions } from './helpers/cookieOptions';
 export { exclude } from './helpers/exclude';
 export { jwtHelpers } from './helpers/jwtHelpers';
 export { calculatePagination, paginationFields, sortConditionSetter } from './helpers/paginations';
-export { prisma } from './helpers/prisma';
+export { prisma, resetDatabase } from './helpers/prisma';
 
 export { pick } from './helpers/pick';
 export { responseHandler, sendDirectResponse } from './helpers/responseHandler';

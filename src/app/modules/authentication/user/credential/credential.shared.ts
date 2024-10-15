@@ -1,13 +1,30 @@
-import { Profile, User } from '@prisma/client';
-import { prisma } from '../../../../../shared';
-import { TUserWithProfile } from './credential.types';
+import { User } from '@prisma/client';
+import { prisma, UserRole } from '../../../../../shared';
+import { TPartialUser, TUserWithProfile } from './credential.types';
 
 export class CredentialSharedServices {
     static async findUserByEmail(email: string): Promise<TUserWithProfile | null> {
         return prisma.user.findUnique({
             where: { email },
+            include: { profile: true, notifications: true },
+        });
+    }
+
+    static async findUserByEmailAndRole(
+        email: string,
+        role: UserRole = UserRole.PERSONAL
+    ): Promise<TUserWithProfile | null> {
+        return prisma.user.findUnique({
+            where: { email, role },
+
             include: { profile: true },
         });
+    }
+
+    static async findPartialUserByEmail(email: string): Promise<TPartialUser | null> {
+        return prisma.gettingStartedUser.findFirst({
+            where: { email },
+        }) as Promise<TPartialUser | null>;
     }
 
     static async findUserById(id: string) {
@@ -17,20 +34,31 @@ export class CredentialSharedServices {
         return user;
     }
 
-    static async findUserByToken(token: string): Promise<User | null> {
-        return prisma.user.findFirst({
+    static async findUserByToken(token: string) {
+        const user = await prisma.user.findFirst({
             where: {
                 refreshToken: {
                     has: token,
                 },
             },
         });
-    }
 
-    static async findProfileByPhoneNumber(phoneNumber: string): Promise<Profile | null> {
-        return prisma.profile.findFirst({
+        return user;
+    }
+    // static async findUserByToken(token: string): Promise<User | null> {
+    //     return prisma.user.findFirst({
+    //         where: {
+    //             refreshToken: {
+    //                 has: token,
+    //             },
+    //         },
+    //     });
+    // }
+
+    static async findUserByPhoneNumber(phone: string): Promise<User | null> {
+        return prisma.user.findUnique({
             where: {
-                phoneNumber,
+                phone,
             },
         });
     }
@@ -39,6 +67,18 @@ export class CredentialSharedServices {
         return prisma.user.update({
             where: {
                 id,
+            },
+            data,
+        });
+    }
+
+    static async updateUserByEmail(
+        email: string,
+        data: Record<string, unknown>
+    ): Promise<User | null> {
+        return prisma.user.update({
+            where: {
+                email,
             },
             data,
         });

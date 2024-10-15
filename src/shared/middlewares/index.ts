@@ -1,7 +1,7 @@
 // export the app
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
-import express, { Application, Request, Response } from 'express';
+import express, { Application } from 'express';
 
 import path from 'path';
 
@@ -29,13 +29,17 @@ export const applyMiddleware = (app: Application) => {
         requestLogger,
     ]);
 
+    const CSS_URL = 'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.1.0/swagger-ui.min.css';
+
     const swaggerSpecs = swaggerJsdoc(swaggerConfigs.options);
 
-    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
-    app.get('/docs.json', (req: Request, res: Response) => {
-        res.setHeader('Content-Type', 'application/json');
-        res.send(swaggerSpecs);
-    });
+    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs, { customCssUrl: CSS_URL }));
+
+    // app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
+    // app.get('/docs.json', (req: Request, res: Response) => {
+    //     res.setHeader('Content-Type', 'application/json');
+    //     res.send(swaggerSpecs);
+    // });
 };
 
 // other middlewares

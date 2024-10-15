@@ -1,6 +1,6 @@
 {
     // Theme
-    "workbench.colorTheme": "FireFly Pro Midnight",
+    "workbench.colorTheme": "One Dark Pro",
 
     // config related to code formatting
     "editor.defaultFormatter": "esbenp.prettier-vscode",
@@ -28,7 +28,7 @@
         "typescript": "typescriptreact"
     },
     "cSpell.words": ["hamba", "nosql"],
-    "editor.fontSize": 13,
+    "editor.fontSize": 16,
     "yaml.schemas": {
         "openapi:v3": "file:///home/dev_reality/Documents/dev_ssd/pro_cleaner-server/src/app/modules/auths/emailAuth/nested/email.docs.yaml",
         "swaggerviewer:openapi": "file:///home/dev_reality/Documents/dev_ssd/pro_cleaner-server/src/app/modules/auths/emailAuth/nested/test.yaml"

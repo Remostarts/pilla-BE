@@ -11,7 +11,8 @@ export const roleVerifier =
     (req: Request, _res: Response, next: NextFunction) => {
         try {
             // get authorization token
-            const token = req.headers.authorization;
+            const token = req.header('Authorization');
+
             if (!token) {
                 throw new HandleApiError(
                     errorNames.UNAUTHORIZED,

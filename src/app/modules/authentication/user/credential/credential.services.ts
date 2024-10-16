@@ -120,8 +120,12 @@ export class CredentialServices {
     };
 
     createUser = async (user: TUserRegisterInput): Promise<object | null> => {
+        console.log('🌼 🔥🔥 CredentialServices 🔥🔥 createUser= 🔥🔥 user🌼', user);
+
         const userExists = await findUserByEmail(user.email);
         const partialUser = await findPartialUserByEmail(user.email);
+        console.log('🌼 🔥🔥 CredentialServices 🔥🔥 createUser= 🔥🔥 partialUser🌼', partialUser);
+
         // user non existence check
         if (userExists) {
             throw new HandleApiError(

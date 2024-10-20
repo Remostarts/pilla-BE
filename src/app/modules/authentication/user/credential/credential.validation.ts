@@ -67,7 +67,7 @@ export const gettingStartUserZodSchema = z.object({
                 required_error: 'Phone number is required',
             })
             .trim(),
-            // .regex(phoneNumberRegex, 'Invalid phone number format.'),
+        // .regex(phoneNumberRegex, 'Invalid phone number format.'),
 
         firstName: z
             .string({

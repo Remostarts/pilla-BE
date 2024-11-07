@@ -177,7 +177,7 @@ export class CredentialServices {
         }
 
         let createdUser = {} as User;
-        let bankApiResponse = {} as TCreateAccountApiResponse;
+        // let bankApiResponse = {} as TCreateAccountApiResponse;
 
         await prisma.$transaction(async (tx) => {
             createdUser = await tx.user.create({
@@ -192,35 +192,37 @@ export class CredentialServices {
                 },
             });
 
-            const bankApiUrl = `${configs.bankUrl}/PiPCreateReservedAccountNumber`;
-            const bankApiHeaders = {
-                'Client-Id': configs.clientId,
-                'X-Auth-Signature': configs.XAuthSignature,
-            };
-            const bankApiBody = {
-                account_name: createdUser?.firstName,
-                bvn: '',
-            };
+            // const bankApiUrl = `${configs.bankUrl}/PiPCreateReservedAccountNumber`;
+            // const bankApiHeaders = {
+            //     'Client-Id': configs.clientId,
+            //     'X-Auth-Signature': configs.XAuthSignature,
+            // };
+            // const bankApiBody = {
+            //     account_name: createdUser?.firstName,
+            //     bvn: '',
+            // };
 
-            bankApiResponse = await axios.post(bankApiUrl, bankApiBody, {
-                headers: bankApiHeaders,
-            });
-            console.log('bankApiResponse', bankApiResponse);
-            const { responseCode } = bankApiResponse.data;
+            // bankApiResponse = await axios.post(bankApiUrl, bankApiBody, {
+            //     headers: bankApiHeaders,
+            // });
+            // console.log('bankApiResponse', bankApiResponse);
+            // const { responseCode } = bankApiResponse.data;
 
-            if (responseCode !== '00') {
-                const errorMessage = getBankApiResponseMessage(responseCode);
-                throw new HandleApiError(
-                    errorNames.BAD_REQUEST,
-                    httpStatus.BAD_REQUEST,
-                    errorMessage
-                );
-            }
+            // if (responseCode !== '00') {
+            //     const errorMessage = getBankApiResponseMessage(responseCode);
+            //     throw new HandleApiError(
+            //         errorNames.BAD_REQUEST,
+            //         httpStatus.BAD_REQUEST,
+            //         errorMessage
+            //     );
+            // }
 
             await tx.userAccount.create({
                 data: {
-                    accountNumber: bankApiResponse?.data.account_number,
-                    accountName: bankApiResponse?.data.account_name,
+                    accountNumber: '9977581536',
+                    accountName: 'john don',
+                    // accountNumber: bankApiResponse?.data.account_number,
+                    // accountName: bankApiResponse?.data.account_name,
                     userId: createdUser?.id,
                 },
             });

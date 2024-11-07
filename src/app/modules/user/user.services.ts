@@ -29,23 +29,19 @@ export class UserServices {
             firstName,
             middleName,
             lastName,
-            email,
-            phone,
             address,
             city,
-            localGovernment,
+            localGovern: localGovernment,
             state,
         } = input;
 
-        if (firstName || middleName || lastName || email || phone) {
+        if (firstName || middleName || lastName) {
             await prisma.user.update({
                 where: { id: userId },
                 data: {
                     ...(firstName && { firstName }),
                     ...(middleName && { middleName }),
                     ...(lastName && { lastName }),
-                    ...(email && { email }),
-                    ...(phone && { phone }),
                 },
             });
         }

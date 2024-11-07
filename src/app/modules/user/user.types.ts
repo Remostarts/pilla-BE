@@ -56,9 +56,9 @@ export type TUpdateUserProfileInput = {
     middleName?: string;
     lastName?: string;
     email?: string;
-    phone?: string;
+    phoneNumber?: string;
     address?: string;
     city?: string;
-    localGovernment?: string;
+    localGovern?: string;
     state?: string;
 };

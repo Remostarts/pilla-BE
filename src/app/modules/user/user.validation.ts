@@ -161,10 +161,10 @@ export const updateUserInputZodSchema = z.object({
         middleName: z.string().trim().optional(),
         lastName: z.string().trim().optional(),
         email: z.string().trim().email().optional(),
-        phone: z.string().trim().optional(),
+        phoneNumber: z.string().trim().optional(),
         address: z.string().trim().optional(),
         city: z.string().trim().optional(),
-        localGovernment: z.string().trim().optional(),
+        localGovern: z.string().trim().optional(),
         state: z.string().trim().optional(),
     }),
 });

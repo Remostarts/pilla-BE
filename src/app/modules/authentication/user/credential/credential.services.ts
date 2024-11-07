@@ -95,6 +95,7 @@ export class CredentialServices {
                 emailVerificationCode: code,
                 emailVerificationExpiresAt: new Date(Date.now() + expirationTime),
                 // phoneVerificationCode: code,
+                phone: user.phoneNumber,
             },
         });
 

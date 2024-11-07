@@ -1,9 +1,9 @@
 {
     // Theme
-    "workbench.colorTheme": "One Dark Pro",
+    "workbench.colorTheme": "Monokai Classic",
 
     // config related to code formatting
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
+   "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.formatOnSave": true,
     "[javascript]": {
         "editor.formatOnSave": false,
@@ -28,7 +28,7 @@
         "typescript": "typescriptreact"
     },
     "cSpell.words": ["hamba", "nosql"],
-    "editor.fontSize": 14,
+    "editor.fontSize": 20,
     "yaml.schemas": {
         "openapi:v3": "file:///home/dev_reality/Documents/dev_ssd/pro_cleaner-server/src/app/modules/auths/emailAuth/nested/email.docs.yaml",
         "swaggerviewer:openapi": "file:///home/dev_reality/Documents/dev_ssd/pro_cleaner-server/src/app/modules/auths/emailAuth/nested/test.yaml"

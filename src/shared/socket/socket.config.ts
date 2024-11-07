@@ -1,10 +1,15 @@
 import { Server as HttpServer } from 'http';
 import { Server, Socket } from 'socket.io';
 
-let io: Server;
-const onlineUsers: { [email: string]: string } = {}; // Mapping of email -> socketId
+// type definitions
+type OnlineUsers = {
+    [email: string]: string;
+};
 
-const initSocket = (server: HttpServer): Server => {
+let io: Server;
+const onlineUsers: OnlineUsers = {}; // Mapping of email -> socketId
+
+export const initSocket = (server: HttpServer): Server => {
     io = new Server(server, {
         cors: {
             origin: '*',
@@ -14,17 +19,6 @@ const initSocket = (server: HttpServer): Server => {
 
     io.on('connection', (socket: Socket) => {
         console.log('User connected:', socket.id);
-
-        socket.on('identify', (email: string) => {
-            onlineUsers[email] = socket.id;
-            console.log(`User identified: ${email} -> Socket ID: ${socket.id}`);
-        });
-
-        socket.on('user-message', (email: string, message: string) => {
-            // io.emit('message', message);
-            const socketId = onlineUsers[email];
-            io.to(socketId).emit('message', message);
-        });
 
         socket.on('disconnect', () => {
             console.log('User disconnected:', socket.id);
@@ -36,12 +30,21 @@ const initSocket = (server: HttpServer): Server => {
                 }
             });
         });
+
+        socket.on('connect_user', (email: string) => {
+            onlineUsers[email] = socket.id;
+            console.log(`User identified: ${email} -> Socket ID: ${socket.id}`);
+        });
+
+        // socket.on('user-message', (email: string, message: string) => {
+        //     // io.emit('message', message);
+        //     const socketId = onlineUsers[email];
+        //     io.to(socketId).emit('message', message);
+        // });
     });
 
     return io;
 };
 
-const getSocketInstance = (): Server | undefined => io;
-const getOnlineUsers = (): { [email: string]: string } => onlineUsers;
-
-export { getOnlineUsers, getSocketInstance, initSocket };
+export const getSocketInstance = (): Server | undefined => io;
+export const getOnlineUsers = (): { [email: string]: string } => onlineUsers;

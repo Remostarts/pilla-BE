@@ -33,4 +33,5 @@ export const configs = {
     bankUrl: process.env.BANK_URL,
     clientId: process.env.CLIENT_ID,
     XAuthSignature: process.env.X_AUTH_SIGNATURE,
+    bankUtilityBillUrl: process.env.BANK_UTILITY_BILL,
 };
